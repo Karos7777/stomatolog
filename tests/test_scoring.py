@@ -79,3 +79,13 @@ def test_unlicensed_at_address_and_anesthesia_gap_penalised():
     assert s_bad["components"]["credentials"]["score"] <= s_clean["components"]["credentials"]["score"] - 30
     texts = " ".join(f["text"] for f in s_bad["flags"])
     assert "без лицензии" in texts and "анестезии" in texts
+
+
+def test_open_platform_above_verified_one_is_suspicious_but_not_vice_versa():
+    def o(platform, rating, n):
+        return {"platform": platform, "rating": rating, "reviews_count": n,
+                "source": {"url": "https://x.kg", "observed": "2026-10-01", "via": "platform_page"}}
+    boosted = clinic("b", [obs(4.9, 300, via="platform_api"), o("ydoc", 4.2, 12)])
+    honest = clinic("h", [obs(4.6, 300, via="platform_api"), o("ydoc", 5.0, 12)])
+    assert evaluate(boosted, 4.8)["components"]["authenticity"]["score"] <= 55
+    assert evaluate(honest, 4.8)["components"]["authenticity"]["score"] == 70

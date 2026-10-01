@@ -29,7 +29,7 @@ def test_clinics_sorted_by_trust_and_filters():
     q = client.get("/api/clinics", params={"q": "Коенкозова, 75"}).json()["items"]
     assert [r["id"] for r in q] == ["dental-house"]
     found = client.get("/api/clinics", params={"license": "found", "limit": 600}).json()["items"]
-    assert found and all(r["license"]["status"] in ("verified", "probable", "address_match") for r in found)
+    assert found and all(r["license"]["status"] in ("verified", "probable", "address_match", "state") for r in found)
     unlic = client.get("/api/clinics", params={"license": "unlicensed", "dental_only": False}).json()["items"]
     assert unlic and all(r["license"]["unlicensed_at_address"] for r in unlic)
 
@@ -71,3 +71,32 @@ def test_static_assets_are_versioned_and_revalidated():
     assert "app.js?v=" in page.text and "style.css?v=" in page.text
     assert page.headers["cache-control"] == "no-cache"
     assert client.get("/static/js/app.js").headers["cache-control"] == "no-cache"
+
+
+def test_recommend_orders_by_verdict_and_filters():
+    res = client.post("/api/recommend", json={"need": "implant", "limit": 20}).json()
+    assert res["need_label"] == "Имплантация" and res["results"]
+    order = {"good": 0, "ok": 1, "bad": 2}
+    levels = [order[r["verdict"]["level"]] for r in res["results"]]
+    assert levels == sorted(levels)
+    assert sum(res["counts"].values()) == res["total"]
+    urgent = client.post("/api/recommend", json={"need": "emergency"}).json()
+    assert urgent["need_24_7"] and all(r["is_24_7"] for r in urgent["results"])
+    near = client.post("/api/recommend", json={"need": "caries", "lat": 42.8746, "lng": 74.5698, "radius_km": 2}).json()
+    assert all(r["distance_km"] <= 2 for r in near["results"])
+
+
+def test_one_click_review_check_and_text_check():
+    r = client.get("/api/check/reviews/dental-house").json()
+    assert r["status"] in ("ok", "warn", "bad") and r["points"]
+    assert r["clinic"]["gis_reviews_url"].endswith("/tab/reviews")
+    t = client.post("/api/check/text", json={"text": "Диплом КГМА 2010. Лучший стоматолог года 2025"}).json()
+    assert [c["claim_type"] for c in t["claims"]] == ["state_diploma", "award"]
+    assert client.post("/api/check/text", json={"text": " "}).status_code == 400
+
+
+def test_search_and_doctors_endpoints():
+    s = client.get("/api/search", params={"q": "Metadent"}).json()
+    assert any(c["id"] == "metadent" for c in s["clinics"])
+    docs = client.get("/api/doctors").json()
+    assert set(docs["stats"]) >= {"total", "verified", "foreign"}

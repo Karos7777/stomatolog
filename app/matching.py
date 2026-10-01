@@ -15,15 +15,15 @@ TOPICS: Dict[str, Dict] = {
     "emergency": {"label": "Срочная помощь 24/7", "keys": ("срочно", "ночь", "ночью", "острая", "флюс", "отек", "отёк", "24/7", "круглосуточ"),
                   "services": ("круглосуточ",), "needs_24_7": True},
     "endo": {"label": "Лечение каналов", "keys": ("канал", "пульпит", "нерв ", "нерва", "микроскоп"),
-             "services": ("микроскоп",), "partial": ("терап", "лечение")},
+             "services": ("микроскоп",), "partial": ("терапевт", "лечение")},
     "caries": {"label": "Лечение кариеса", "keys": ("кариес", "пломб", "дырк"),
-               "services": ("терап", "кариес", "лечение")},
+               "services": ("стоматолог-терапевт", "кариес"), "universal": True},
     "extraction": {"label": "Удаление", "keys": ("удалит", "удален", "удалени", "удалять", "вырвать", "мудрост", "восьмерк"),
                    "services": ("хирург", "удален")},
     "prosthetics": {"label": "Коронки, протезы, виниры", "keys": ("коронк", "протез", " мост", "винир"),
                     "services": ("ортопед", "протез", "винир", "коронк"), "partial": ("эстетик", "цифров")},
     "hygiene": {"label": "Чистка и гигиена", "keys": ("чистк", "камень", "налет", "налёт", "отбел", "гигиен"),
-                "services": ("чистк", "гигиен", "профилакт")},
+                "services": ("чистк", "гигиен", "профилакт", "пародонт"), "universal": True},
     "maxillofacial": {"label": "Челюстно-лицевая хирургия", "keys": ("челюст", "ортогнат", "травм"),
                       "services": ("челюстно", "ортогнат")},
 }
@@ -45,7 +45,8 @@ def coverage(clinic: Clinic, topics: List[str]) -> Dict:
     matched, partial, missing = [], [], []
     for t in topics:
         d = TOPICS[t]
-        if any(s in text for s in d["services"]) or (d.get("needs_24_7") and clinic.is_24_7):
+        if (any(s in text for s in d["services"]) or (d.get("needs_24_7") and clinic.is_24_7)
+                or (d.get("universal") and not clinic.multi_profile)):
             matched.append(d["label"])
         elif any(s in text for s in d.get("partial", ())):
             partial.append(d["label"])

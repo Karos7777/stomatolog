@@ -16,6 +16,7 @@ ObservedVia = Literal[
     "official_registry",    # госреестр (лицензии МЗ КР, Түндүк, реестр юрлиц)
     "platform_api",         # официальный API площадки (2ГИС Catalog API)
     "manual_check",         # человек открыл страницу и переписал значение
+    "platform_page",        # публичная страница площадки (анкета врача на YDoc)
     "web_search_snippet",   # значение из поисковой выдачи (может быть устаревшим)
     "clinic_claim",         # заявление самой клиники (сайт, соцсети)
     "media",                # СМИ
@@ -25,7 +26,7 @@ ObservedVia = Literal[
 EVIDENCE_LEVELS = {
     0: "Нет данных",
     1: "Заявлено клиникой/врачом (не проверено)",
-    2: "Документ предъявлен, но не сверен с эмитентом",
+    2: "Документ проверен третьей стороной (например, YDoc сверил скан), но не вузом",
     3: "Подтверждено эмитентом (вуз, производитель, ассоциация)",
     4: "Подтверждено в государственном реестре",
 }
@@ -75,17 +76,21 @@ class Doctor(BaseModel):
     experience_years_claimed: Optional[int] = None
     claims: List[CredentialClaim] = []
     sources: List[Source] = []
+    profile: Dict[str, Any] = {}         # разбор анкеты YDoc (app/verification/doctors.py)
 
 
-LicenseStatus = Literal["verified", "probable", "address_match", "ambiguous", "name_other_address",
-                        "not_found", "not_checked"]
+LicenseStatus = Literal["verified", "probable", "address_match", "ambiguous", "doctor_license",
+                        "name_other_address", "state", "not_found", "not_checked"]
 
 LICENSE_LABELS = {
     "verified": "Лицензия найдена в реестре МЗ КР: совпали адрес и название",
     "probable": "Вероятно найдена: адрес и название совпали частично",
     "address_match": "По этому адресу есть стоматологическая лицензия, но на другое имя (обычно юрлицо или ИП владельца) — уточните",
     "ambiguous": "По этому адресу много лицензиатов (медцентр/бизнес-центр) — какой из них клиника, неизвестно",
+    "doctor_license": "Найдена лицензия ИП на врача этой клиники, но с другим адресом в реестре — уточните, по какой лицензии он принимает здесь",
     "name_other_address": "Лицензия на похожее название, но выдана на ДРУГОЙ адрес",
+    "state": "Государственная (муниципальная) поликлиника: реестр лицензий МЗ КР ведётся только для частных "
+             "клиник и ИП (приказ МЗ КР №212 от 25.03.2013, п. 1.2), поэтому её там и не должно быть",
     "not_found": "В реестре МЗ КР не найдена — спросите номер лицензии",
     "not_checked": "Не проверялась",
 }
@@ -128,6 +133,7 @@ class Clinic(BaseModel):
     inn_source: Optional[Source] = None
     address: str
     district: Optional[str] = None
+    living_area: Optional[str] = None    # микрорайон/жилмассив из 2ГИС: в реестре МЗ адрес часто «мкр. Асанбай 17/1»
     branches: Optional[int] = None
     phones: List[str] = []
     website: Optional[str] = None

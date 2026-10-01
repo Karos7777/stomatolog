@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DentBishkek — стоматологии Бишкека с доказательствами</title>
-  <meta name="description" content="Рейтинг стоматологий Бишкека: откуда каждая цифра, где признаки накрутки отзывов, что из квалификации подтверждено.">
+  <title>DentBishkek — стоматологи Бишкека, которым можно доверять</title>
+  <meta name="description" content="Выберите, что нужно — покажем стоматологии Бишкека с проверенной лицензией, честными отзывами и врачами с проверенными дипломами.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css?v={{ v }}">
@@ -16,29 +16,62 @@
         <span class="brand-mark">🦷</span>
         <div>
           <div class="brand-name">DentBishkek</div>
-          <div class="brand-sub">стоматологии Бишкека с доказательствами</div>
+          <div class="brand-sub">стоматологи Бишкека, которым можно доверять</div>
         </div>
       </div>
       <nav class="tabs" role="tablist">
-        <button class="tab active" data-tab="ranking">Рейтинг</button>
-        <button class="tab" data-tab="match">Подбор</button>
-        <button class="tab" data-tab="reviews">Проверить отзывы</button>
-        <button class="tab" data-tab="cert">Проверить сертификат</button>
-        <button class="tab" data-tab="method">Методика</button>
-        <button class="tab" data-tab="audit" title="Что было выдумано в прошлой версии">Аудит</button>
+        <button class="tab active" data-tab="pick">Подобрать</button>
+        <button class="tab" data-tab="doctors">Врачи</button>
+        <button class="tab" data-tab="clinics">Все клиники</button>
+        <button class="tab" data-tab="check">Проверить</button>
+        <button class="tab" data-tab="how">Как это работает</button>
       </nav>
     </div>
   </header>
 
   <main class="wrap">
-    <section class="notice" id="notice">
-      <div class="notice-title">Что здесь правда, а что нет — честно</div>
-      <p id="notice-text">Загрузка…</p>
-      <div class="stats" id="stats"></div>
+    <!-- ============ ПОДОБРАТЬ ============ -->
+    <section class="panel active" id="tab-pick">
+      <div class="hero">
+        <h1>Найдём стоматолога, которому можно доверять</h1>
+        <p class="lead">Выберите, что нужно. Покажем лучшие клиники и объясним простыми словами: есть ли лицензия, честные ли отзывы и кто врачи.</p>
+        <div class="needs">
+          <button class="need" data-need="caries"><span>🦷</span>Вылечить зуб</button>
+          <button class="need" data-need="emergency"><span>⚡</span>Болит прямо сейчас</button>
+          <button class="need" data-need="implant"><span>🔩</span>Имплант</button>
+          <button class="need" data-need="ortho"><span>😁</span>Брекеты, элайнеры</button>
+          <button class="need" data-need="kids"><span>👶</span>Ребёнку</button>
+          <button class="need" data-need="extraction"><span>✂️</span>Удалить зуб</button>
+          <button class="need" data-need="prosthetics"><span>👑</span>Коронка, винир</button>
+          <button class="need" data-need="hygiene"><span>✨</span>Чистка зубов</button>
+          <button class="need" data-need="sedation"><span>😴</span>Лечение во сне</button>
+          <button class="need" data-need="endo"><span>🔬</span>Каналы, микроскоп</button>
+        </div>
+        <div class="pick-options">
+          <label class="check"><input type="checkbox" id="near"> Рядом со мной (до 5 км)</label>
+          <label class="check"><input type="checkbox" id="verified-docs"> Только где есть врачи с проверенными дипломами</label>
+        </div>
+        <p class="data-line" id="data-line"></p>
+      </div>
+      <div id="pick-out"></div>
     </section>
 
-    <!-- ============ РЕЙТИНГ ============ -->
-    <section class="panel active" id="tab-ranking">
+    <!-- ============ ВРАЧИ ============ -->
+    <section class="panel" id="tab-doctors">
+      <h2>Врачи-стоматологи Бишкека</h2>
+      <p class="lead" id="doc-stats">Загрузка…</p>
+      <div class="controls">
+        <input type="search" id="doc-q" placeholder="ФИО, клиника, вуз или специальность">
+        <select id="doc-spec"><option value="">Любая специальность</option></select>
+        <label class="check"><input type="checkbox" id="doc-verified"> Диплом проверен</label>
+        <label class="check"><input type="checkbox" id="doc-foreign"> Учились за рубежом</label>
+      </div>
+      <div id="doc-list" class="list"></div>
+      <div class="more-row"><span id="doc-count" class="muted small"></span><button class="btn ghost" id="doc-more" hidden>Показать ещё</button></div>
+    </section>
+
+    <!-- ============ ВСЕ КЛИНИКИ ============ -->
+    <section class="panel" id="tab-clinics">
       <div class="controls">
         <input type="search" id="q" placeholder="Клиника, улица, врач или услуга">
         <select id="topic">
@@ -46,14 +79,13 @@
           {% for key, label in topics.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
         </select>
         <select id="sort">
-          <option value="trust">По индексу доверия</option>
+          <option value="trust">Сначала надёжные</option>
           <option value="rating">По рейтингу</option>
           <option value="volume">По числу оценок</option>
-          <option value="authenticity">По подлинности отзывов</option>
         </select>
         <select id="license">
           <option value="">Любая лицензия</option>
-          <option value="found">Лицензия найдена в реестре</option>
+          <option value="found">Лицензия найдена</option>
           <option value="problems">Нет в реестре / другой адрес</option>
           <option value="unlicensed">По адресу МЗ выявил работу без лицензии</option>
         </select>
@@ -65,98 +97,52 @@
         <label class="check"><input type="checkbox" id="only247"> Только 24/7</label>
         <label class="check"><input type="checkbox" id="withmulti"> Показывать медцентры</label>
       </div>
-      <p class="hint">Индекс доверия = 45% рейтинг с поправкой на число оценок + 25% подлинность отзывов + 25% лицензия и квалификация + 5% прозрачность. Нажмите «Доказательства», чтобы увидеть источник каждой цифры и найденную лицензию.</p>
       <div id="list" class="list"></div>
       <div class="more-row"><span id="list-count" class="muted small"></span><button class="btn ghost" id="more" hidden>Показать ещё</button></div>
     </section>
 
-    <!-- ============ ПОДБОР ============ -->
-    <section class="panel" id="tab-match">
-      <div class="card form-card">
-        <label for="problem" class="label">Опишите проблему своими словами</label>
-        <textarea id="problem" rows="3" placeholder="Например: нужен имплант на нижнюю шестёрку; ребёнку 6 лет, боится лечить; болит зуб ночью"></textarea>
-        <div class="row">
-          <label class="check"><input type="checkbox" id="m247"> Нужна помощь прямо сейчас (24/7)</label>
-          <button class="btn primary" id="match-btn">Подобрать</button>
-        </div>
-      </div>
-      <div id="match-out"></div>
-    </section>
-
-    <!-- ============ ОТЗЫВЫ ============ -->
-    <section class="panel" id="tab-reviews">
+    <!-- ============ ПРОВЕРИТЬ ============ -->
+    <section class="panel" id="tab-check">
       <div class="grid-2">
         <div class="card form-card">
-          <div class="label">Вставьте отзывы о клинике</div>
-          <p class="hint">Поддерживаются CSV/JSON с колонками <code>date, rating, author, author_reviews_count, text</code> или простой текст: отзывы через пустую строку, в начале блока — имя, «N отзывов», дата и оценка вида «5★». Чем больше полей, тем больше признаков можно проверить.</p>
-          <textarea id="reviews-raw" rows="12" placeholder="Айгерим Т.&#10;3 отзыва&#10;12 марта 2026&#10;5★&#10;Лечили канал под микроскопом у доктора Азиза…&#10;&#10;Бакыт&#10;1 отзыв&#10;14 марта 2026&#10;5★&#10;Лучшая клиника! Всем рекомендую!"></textarea>
-          <div class="row wrap-row">
-            <label class="btn ghost file-btn">Загрузить файл<input type="file" id="reviews-file" accept=".csv,.json,.txt" hidden></label>
-            <button class="btn ghost" data-example="organic">Пример: обычный поток (синтетика)</button>
-            <button class="btn ghost" data-example="boosted">Пример: накрученный (синтетика)</button>
-            <button class="btn primary" id="reviews-btn">Анализировать</button>
-          </div>
+          <h2>Проверить отзывы клиники</h2>
+          <p class="hint">Начните вводить название и выберите клинику из списка — проверим всё, что известно, без копирования отзывов.</p>
+          <input id="rev-q" list="clinic-list" placeholder="Например: Metadent или Коенкозова" autocomplete="off">
+          <datalist id="clinic-list"></datalist>
+          <div id="rev-out" class="result-col"></div>
           <details class="howto">
-            <summary>Как собрать отзывы из 2ГИС</summary>
-            <ol>
-              <li>Откройте карточку клиники в 2ГИС → вкладка «Отзывы», прокрутите до конца, чтобы загрузились все.</li>
-              <li>Перепишите в таблицу дату, оценку, имя, число отзывов автора (видно под именем) и текст. Достаточно 30–50 последних.</li>
-              <li>Отдельно посмотрите раздел «Неподтверждённые» — их число впишите в поле ниже: это прямой сигнал антифрода 2ГИС.</li>
-            </ol>
+            <summary>Хотите проверить сами тексты отзывов?</summary>
+            <p class="hint">Откройте отзывы клиники в 2ГИС, скопируйте их и вставьте сюда — каждый отзыв через пустую строку
+              (имя, «N отзывов», дата, «5★», текст). Проверим копии, всплески по датам, авторов-однодневок и пустую похвалу.</p>
+            <textarea id="reviews-raw" rows="8" placeholder="Айгерим Т.&#10;3 отзыва&#10;12 марта 2026&#10;5★&#10;Лечили канал под микроскопом…"></textarea>
             <div class="row wrap-row">
-              <label class="mini">Рейтинг в 2ГИС <input type="number" id="agg-rating" step="0.1" min="1" max="5"></label>
-              <label class="mini">Оценок <input type="number" id="agg-count" min="0"></label>
-              <label class="mini">Неподтверждённых <input type="number" id="agg-unconf" min="0"></label>
+              <label class="btn ghost file-btn">Загрузить файл<input type="file" id="reviews-file" accept=".csv,.json,.txt" hidden></label>
+              <button class="btn ghost" data-example="boosted">Пример накрутки</button>
+              <button class="btn primary" id="reviews-btn">Проверить тексты</button>
             </div>
+            <div id="reviews-out" class="result-col"></div>
           </details>
         </div>
-        <div id="reviews-out" class="result-col">
-          <div class="placeholder">Здесь появится разбор: индекс подлинности, всплески по датам, копии текстов, авторы-однодневки, «закапывание» негатива и рейтинг без подозрительных отзывов.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ СЕРТИФИКАТ ============ -->
-    <section class="panel" id="tab-cert">
-      <div class="grid-2">
         <div class="card form-card">
-          <div class="label">Что написано в документе</div>
-          <label class="field">Название <input id="c-title" placeholder="Master of Oral Implantology / Диплом / Сертификат специалиста…"></label>
-          <label class="field">Кем выдан <input id="c-issuer" placeholder="Straumann / КГМА им. Ахунбаева / International Academy of…"></label>
-          <div class="row">
-            <label class="field">Год выдачи <input id="c-year" type="number" min="1950" max="2100"></label>
-            <label class="field">Номер <input id="c-id" placeholder="если есть"></label>
-          </div>
-          <div class="label">Что известно о враче</div>
-          <div class="row">
-            <label class="field">Год окончания вуза <input id="c-grad" type="number" min="1950" max="2100"></label>
-            <label class="field">Заявленный стаж, лет <input id="c-exp" type="number" min="0" max="70"></label>
-          </div>
-          <label class="field">Специальность врача <input id="c-spec" placeholder="терапевт / хирург-имплантолог / ортодонт"></label>
-          <label class="field">Что вы видели
-            <select id="c-level">
-              <option value="1">Только слова клиники или фото на стене/в Instagram</option>
-              <option value="2">Держал(а) оригинал документа в руках</option>
-              <option value="3">Эмитент подтвердил (вуз, производитель, ассоциация)</option>
-              <option value="4">Нашёл(ла) в государственном реестре</option>
-            </select>
-          </label>
-          <div class="row wrap-row">
-            <button class="btn ghost" id="cert-demo">Пример из старой версии сайта</button>
-            <button class="btn primary" id="cert-btn">Проверить</button>
-          </div>
-        </div>
-        <div id="cert-out" class="result-col">
-          <div class="placeholder">Покажем, что это за документ, что он доказывает, а что — нет, где его сверить и есть ли противоречия в датах и стаже.</div>
+          <h2>Проверить врача или сертификат</h2>
+          <p class="hint">Введите ФИО — покажем дипломы врача и что из них проверено.</p>
+          <input id="doc-find" list="doctor-list" placeholder="ФИО врача" autocomplete="off">
+          <datalist id="doctor-list"></datalist>
+          <div id="doc-find-out" class="result-col"></div>
+          <p class="hint" style="margin-top:22px">…или вставьте, что пишут о враче на сайте клиники, в Instagram или на сертификате — разберём каждое утверждение.</p>
+          <textarea id="cert-text" rows="5" placeholder="Например: Окончил КГМА в 2010 году. Ординатура по ортопедии. Сертификат Master of Implantology, 2019. Стаж 20 лет."></textarea>
+          <div class="row"><button class="btn primary" id="cert-text-btn">Проверить текст</button></div>
+          <div id="cert-text-out" class="result-col"></div>
         </div>
       </div>
     </section>
 
-    <!-- ============ МЕТОДИКА ============ -->
-    <section class="panel" id="tab-method"><div id="method-out" class="prose"></div></section>
-
-    <!-- ============ АУДИТ ============ -->
-    <section class="panel" id="tab-audit"><div id="audit-out"></div></section>
+    <!-- ============ КАК ЭТО РАБОТАЕТ ============ -->
+    <section class="panel" id="tab-how">
+      <div class="stats" id="stats"></div>
+      <div id="method-out" class="prose"></div>
+      <div id="audit-out"></div>
+    </section>
   </main>
 
   <div class="modal" id="modal" hidden>
@@ -167,8 +153,8 @@
   </div>
 
   <footer class="wrap footer">
-    Данные — из открытых источников со ссылками. Ничего не выдумано: если цифры нет в источнике, мы пишем «нет данных».
-    Перед лечением проверьте лицензию клиники по ИНН и попросите показать документы врача.
+    Каждая цифра — со ссылкой на источник: 2ГИС, реестр лицензий Минздрава КР, анкеты YDoc. Ничего не выдумано: если данных нет, так и пишем.
+    Перед лечением всё равно попросите показать лицензию и диплом врача.
   </footer>
 
   <script src="/static/js/app.js?v={{ v }}"></script>

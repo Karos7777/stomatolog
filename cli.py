@@ -6,6 +6,8 @@
     python cli.py reviews отзывы.csv    # анализ отзывов из файла
     python cli.py cert "Master of Implantology" --issuer Straumann --year 2021 --grad 2008
     python cli.py audit                 # что было не так в старой версии
+    python cli.py pick implant          # 5 лучших клиник под задачу с вердиктом
+    python cli.py doctors --foreign     # врачи, учившиеся за рубежом
 """
 import argparse
 import sys
@@ -45,6 +47,7 @@ def _flags(flags):
 
 LIC_SHORT = {"verified": "[green]найдена[/]", "probable": "[green]вероятно[/]", "address_match": "[yellow]по адресу[/]",
              "ambiguous": "[yellow]много в здании[/]", "name_other_address": "[yellow]другой адрес[/]",
+             "doctor_license": "[yellow]ИП врача[/]", "state": "[green]госполиклиника[/]",
              "not_found": "[red]нет в реестре[/]", "not_checked": "—"}
 
 
@@ -151,6 +154,32 @@ def cmd_cert(args) -> None:
         console.print(f"  {link['title']}: {link['url']}")
 
 
+def cmd_pick(args) -> None:
+    from app.api import RecommendRequest, recommend
+    res = recommend(RecommendRequest(need=args.need, limit=args.top))
+    c = res["counts"]
+    console.print(f"[bold]{res['need_label']}[/bold]: {res['total']} клиник — ✅ {c['good']} можно доверять, "
+                  f"⚠️ {c['ok']} проверьте, ❌ {c['bad']} не рекомендуем без проверки")
+    icons = {"ok": "✅", "warn": "⚠️", "bad": "❌", "unknown": "❔"}
+    for i, r in enumerate(res["results"], 1):
+        console.print(f"\n[bold]{i}. {r['name']}[/bold] — {r['verdict']['title']}  [dim]{r['address']}[/dim]")
+        for ch in r["verdict"]["checks"]:
+            console.print(f"   {icons[ch['status']]} {ch['title']}" + (f" [dim]— {ch['detail']}[/dim]" if ch["detail"] else ""))
+
+
+def cmd_doctors(args) -> None:
+    docs = [d for d in repo.doctors if (not args.verified or d["documents_verified"]) and (not args.foreign or d["foreign"])]
+    console.print(f"Врачей: {len(docs)} (из {len(repo.doctors)} анкет YDoc)")
+    for d in sorted(docs, key=lambda d: (not d["documents_verified"], -(d["experience_years"] or 0)))[:args.top]:
+        mark = "[green]✅ диплом проверен[/]" if d["documents_verified"] else "[dim]не проверен[/]"
+        foreign = f" [cyan]🌍 {', '.join(d['foreign_countries'])}[/]" if d["foreign"] else ""
+        console.print(f"[bold]{d['name']}[/bold] — {', '.join(d['specialties'][:3])}; стаж {d['experience_years'] or '?'} {mark}{foreign}")
+        for line in d["summary"]:
+            console.print(f"   {line}")
+        for f in d["red_flags"]:
+            console.print(f"   [bold red]✖ {f}[/]")
+
+
 def cmd_audit(_args) -> None:
     a = load_legacy_audit()
     console.print(Panel.fit(a["summary"], border_style="red"))
@@ -173,11 +202,18 @@ def main_cli(argv=None) -> None:
     p.add_argument("--grad", type=int, help="год окончания вуза"); p.add_argument("--exp", type=int, help="заявленный стаж")
     p.add_argument("--specialty"); p.add_argument("--level", type=int, default=1, choices=[0, 1, 2, 3, 4])
     sub.add_parser("audit")
+    p = sub.add_parser("pick", help="подобрать клинику под задачу")
+    p.add_argument("need", choices=["caries", "emergency", "implant", "ortho", "kids", "extraction", "prosthetics",
+                                    "hygiene", "sedation", "endo"])
+    p.add_argument("--top", type=int, default=5)
+    p = sub.add_parser("doctors", help="врачи с YDoc")
+    p.add_argument("--verified", action="store_true"); p.add_argument("--foreign", action="store_true")
+    p.add_argument("--top", type=int, default=20)
     args = ap.parse_args(argv)
     if args.cmd is None:
         args.top, args.with_multi = 30, False
-    {"show": cmd_show, "match": cmd_match, "reviews": cmd_reviews, "cert": cmd_cert,
-     "audit": cmd_audit}.get(args.cmd, cmd_ranking)(args)
+    {"show": cmd_show, "match": cmd_match, "reviews": cmd_reviews, "cert": cmd_cert, "audit": cmd_audit,
+     "pick": cmd_pick, "doctors": cmd_doctors}.get(args.cmd, cmd_ranking)(args)
 
 
 if __name__ == "__main__":

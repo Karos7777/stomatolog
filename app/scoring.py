@@ -14,14 +14,15 @@ from typing import Dict, List, Optional, Tuple
 from app.models import Clinic, CredentialCheckRequest, RatingObservation, ReviewAnalysis
 from app.verification.credentials import check_credential
 
+VERIFIED_PLATFORMS = {"ydoc"}   # отзывы подтверждаются записью на приём или звонком пациенту
 WEIGHTS = {"rating": 0.45, "authenticity": 0.25, "credentials": 0.25, "transparency": 0.05}
 PRIOR_STRENGTH = 25      # «виртуальные» оценки на уровне среднего по городу
 RATING_SD = 0.9          # типичный разброс оценок одного пациента
 Z_80 = 1.2816            # односторонняя нижняя граница 80%
 FLOOR, CEIL = 3.8, 5.0   # шкала рейтинга → 0..100
 
-VIA_RANK = {"official_registry": 5, "platform_api": 4, "manual_check": 3, "web_search_snippet": 2,
-            "clinic_claim": 1, "media": 1}
+VIA_RANK = {"official_registry": 5, "platform_api": 4, "manual_check": 3, "platform_page": 3,
+            "web_search_snippet": 2, "clinic_claim": 1, "media": 1}
 
 
 def _platform_estimate(obs: List[RatingObservation]) -> Dict:
@@ -34,13 +35,13 @@ def _platform_estimate(obs: List[RatingObservation]) -> Dict:
     with_ratings = [o.ratings_count for o in current if o.ratings_count]
     with_reviews = [o.reviews_count for o in current if o.reviews_count]
     volume = min(with_ratings) if with_ratings else (min(with_reviews) if with_reviews else 0)
-    volumes = [o.volume for o in obs if o.volume]
+    volumes = [o.volume for o in current if o.volume]   # расхождение считаем только внутри лучшего источника
     spread = (max(volumes) - min(volumes)) / max(volumes) if len(volumes) > 1 else 0.0
-    ratings_spread = max(o.rating for o in obs) - min(o.rating for o in obs)
+    ratings_spread = max(o.rating for o in current) - min(o.rating for o in current)
     unconfirmed = next((o.unconfirmed_count for o in current if o.unconfirmed_count is not None), None)
     return {"rating": rating, "volume": volume, "via": current[0].source.via, "observed": latest_date,
             "volume_spread": round(spread, 2), "rating_spread": round(ratings_spread, 2),
-            "unconfirmed": unconfirmed, "n_obs": len(obs)}
+            "unconfirmed": unconfirmed, "n_obs": len(current)}
 
 
 def platform_estimates(clinic: Clinic) -> Dict[str, Dict]:
@@ -146,7 +147,18 @@ def _aggregate_signals(clinic: Clinic, estimates: Dict[str, Dict], with_texts: b
                            "накрученные отзывы. Посмотрите раздел «Неподтверждённые».")
             flags.append({"level": "yellow", "text": f"Удалено {-v['delta']} оценок"})
     vals = [(p, e["rating"]) for p, e in estimates.items() if e["volume"] >= 10]
-    if len(vals) >= 2:
+    verified = [v for v in vals if v[0] in VERIFIED_PLATFORMS]
+    open_ = [v for v in vals if v[0] not in VERIFIED_PLATFORMS]
+    if verified and open_:
+        # Накручивают там, где это дёшево: подозрительно, если открытая площадка ВЫШЕ проверенной
+        for p, r in open_:
+            for vp, vr in verified:
+                if r - vr >= 0.4:
+                    penalty += 15
+                    reasons.append(f"На {p} рейтинг {r:g}★, а в подтверждённых отзывах {vp} — {vr:g}★. "
+                                   "Открытая площадка заметно лучше проверенной — признак накрутки.")
+                    flags.append({"level": "yellow", "text": f"2ГИС выше подтверждённых отзывов на {r - vr:.1f}★"})
+    elif len(vals) >= 2:
         hi, lo = max(vals, key=lambda x: x[1]), min(vals, key=lambda x: x[1])
         gap = hi[1] - lo[1]
         if gap >= 0.4:
@@ -178,8 +190,8 @@ def authenticity_component(clinic: Clinic, estimates: Dict[str, Dict],
             "reasons": reasons, "flags": flags}
 
 
-LICENSE_POINTS = {"verified": 45, "probable": 30, "address_match": 25, "ambiguous": 10,
-                  "name_other_address": 5, "not_found": -10, "not_checked": 0}
+LICENSE_POINTS = {"verified": 45, "probable": 30, "address_match": 25, "ambiguous": 10, "doctor_license": 15,
+                  "name_other_address": 5, "state": 25, "not_found": -10, "not_checked": 0}
 
 
 def license_assessment(clinic: Clinic) -> Tuple[float, List[str], List[Dict]]:
@@ -198,8 +210,12 @@ def license_assessment(clinic: Clinic) -> Tuple[float, List[str], List[Dict]]:
                       "text": "Лицензия вероятно найдена" if lic.status == "probable" else "Лицензия по адресу — на другое имя"})
     elif lic.status == "ambiguous":
         flags.append({"level": "yellow", "text": f"По адресу {lic.other_licensees_at_address + 1} лицензиатов — уточните"})
+    elif lic.status == "doctor_license":
+        flags.append({"level": "yellow", "text": "Лицензия ИП врача — по другому адресу"})
     elif lic.status == "name_other_address":
         flags.append({"level": "yellow", "text": "Лицензия выдана на другой адрес"})
+    elif lic.status == "state":
+        flags.append({"level": "green", "text": "Госполиклиника — частная лицензия не нужна"})
     elif lic.status == "not_found":
         flags.append({"level": "red", "text": "Нет в реестре лицензий МЗ"})
         reasons.append("Это не доказывает работу без лицензии (реестр мог не учесть старые лицензии или другое юрлицо), "
@@ -236,9 +252,21 @@ def credentials_component(clinic: Clinic) -> Dict:
         reasons.append(f"Юрлицо найдено в открытом реестре: ИНН {clinic.inn} — по нему можно проверить лицензию.")
         flags.append({"level": "green", "text": "Юрлицо найдено (ИНН)"})
     if clinic.doctors:
-        reasons.append("Врачи названы публично: " + ", ".join(d.name for d in clinic.doctors) + ".")
-    claim_weight = 0.0
+        reasons.append("Врачи названы публично: " + ", ".join(d.name for d in clinic.doctors[:6])
+                       + (f" и ещё {len(clinic.doctors) - 6}" if len(clinic.doctors) > 6 else "") + ".")
+    verified = [d for d in clinic.doctors if d.profile.get("documents_verified")]
+    listed = [d for d in clinic.doctors if d.profile.get("education") and not d.profile.get("documents_verified")]
+    doctor_points = min(30.0, 10.0 * len(verified) + 3.0 * len(listed))
+    if verified:
+        reasons.append(f"Врачей с проверенными документами (YDoc сверил дипломы): {len(verified)} — "
+                       + ", ".join(d.name for d in verified[:4]) + ".")
+        flags.append({"level": "green", "text": f"Врачей с проверенными дипломами: {len(verified)}"})
     for doc in clinic.doctors:
+        for f in doc.profile.get("red_flags", []):
+            score -= 10
+            flags.append({"level": "red", "text": f"{doc.name}: {f}"})
+        if doc.profile:
+            continue   # анкеты YDoc уже разобраны в app/verification/doctors.py
         for c in doc.claims:
             v = check_credential(CredentialCheckRequest(
                 title=c.title, claim_type=c.kind, issuer=c.issuer, year=c.year, document_id=c.document_id,
@@ -246,13 +274,12 @@ def credentials_component(clinic: Clinic) -> Dict:
                 holder_experience_years=doc.experience_years_claimed,
                 holder_specialty=doc.role, evidence_level=c.evidence.level))
             checks.append({"doctor": doc.name, "claim": c.title, "verdict": v.model_dump()})
-            claim_weight += v.weight
             if v.red_flags:
                 score -= 15
                 flags.append({"level": "red", "text": f"{doc.name}: {v.verdict}"})
-    score += min(30.0, claim_weight * 30)
-    if clinic.doctors and claim_weight < 0.5:
-        reasons.append("Квалификация врачей известна только со слов клиники/СМИ — документы не сверены.")
+    score += doctor_points
+    if clinic.doctors and not verified:
+        reasons.append("Документы врачей не проверены ни площадкой, ни вузом — квалификация известна со слов.")
     if not clinic.doctors:
         reasons.append("Ни один врач не назван в открытых источниках, которые мы нашли.")
     return {"score": round(max(0.0, min(100.0, score)), 1), "reasons": reasons, "flags": flags, "checks": checks}

@@ -215,9 +215,71 @@ table.audit td:first-child { min-width: 180px; }
 .more-row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; }
 .lic { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
 .lic details { margin-top: 4px; }
+/* ---------- простой режим ---------- */
+h1 { font-size: 28px; line-height: 1.25; margin: 8px 0 8px; }
+.lead { font-size: 16px; color: var(--muted); margin: 0 0 18px; }
+.hero { padding: 26px 0 8px; }
+.needs { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.need {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 14px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 600;
+  text-align: left; box-shadow: var(--shadow);
+}
+.need span { font-size: 24px; }
+.need:hover { border-color: var(--accent); }
+.need.active { border-color: var(--accent); background: var(--info-bg); outline: 2px solid var(--accent); }
+.pick-options { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 14px 0 6px; }
+.pick-options .check, .controls .check { white-space: normal; }
+.data-line { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+.summary { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin: 18px 0 12px; font-size: 15px; }
+.rec, .clinic { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 16px 18px; margin-bottom: 12px; border-left: 5px solid var(--na); }
+.rec.level-good { border-left-color: var(--good); }
+.rec.level-ok { border-left-color: var(--mid); }
+.rec.level-bad { border-left-color: var(--low); }
+.rec-head { display: flex; gap: 14px; align-items: flex-start; }
+.rec-num { font-size: 22px; font-weight: 700; color: var(--muted); min-width: 28px; }
+.rec-title { flex: 1; min-width: 0; }
+.rec-title h3 { margin: 0 0 2px; font-size: 18px; }
+.score-side { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-weight: 600;
+  font-size: 14px; white-space: nowrap; background: var(--na-bg); color: var(--na); }
+.badge.good { background: var(--good-bg); color: var(--good); }
+.badge.mid { background: var(--mid-bg); color: var(--mid); }
+.badge.low { background: var(--low-bg); color: var(--low); }
+.badge.info { background: var(--info-bg); color: var(--accent); }
+.checks { list-style: none; padding: 0; margin: 12px 0 4px 42px; display: grid; gap: 8px; }
+.checks li { display: flex; gap: 10px; align-items: flex-start; }
+.checks .ci { font-size: 16px; line-height: 1.4; }
+.checks .small { color: var(--muted); }
+.rec .actions, .clinic .actions { margin-left: 42px; }
+.verdict-top { margin: 12px 0 0; }
+.doctor-card { margin-bottom: 10px; }
+.doc-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.doc-head h3 { margin: 0; font-size: 17px; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badges .badge { font-size: 12.5px; padding: 4px 10px; }
+.edu { margin: 10px 0; padding-left: 18px; font-size: 14px; }
+.edu li { margin-bottom: 4px; }
+.verdict-card { border-left: 5px solid var(--na); margin-top: 12px; }
+.verdict-card.ok { border-left-color: var(--good); }
+.verdict-card.warn { border-left-color: var(--mid); }
+.verdict-card.bad { border-left-color: var(--low); }
+.verdict-card ul { padding-left: 18px; font-size: 14px; }
+.big-line { font-size: 17px; margin-bottom: 4px; }
+#tab-check h2 { font-size: 20px; }
+#tab-how .stats { margin: 20px 0; }
+
 .footer { color: var(--muted); font-size: 13px; padding-bottom: 32px; }
 
 @media (max-width: 860px) {
+  h1 { font-size: 23px; }
+  .needs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .need { padding: 12px; font-size: 14px; }
+  .rec-head { flex-wrap: wrap; }
+  .rec-head .badge { order: 3; }
+  .checks, .rec .actions, .clinic .actions { margin-left: 0; }
+  .score-side { align-items: flex-start; text-align: left; }
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .stat span { font-size: 16px; }
   .stat small { font-size: 11.5px; line-height: 1.2; display: block; }

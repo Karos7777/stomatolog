@@ -20,7 +20,9 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
 API = "https://catalog.api.2gis.com/3.0/items"
-FIELDS = "items.reviews,items.point,items.org,items.rubrics,items.schedule,items.address"
+FIELDS = ("items.reviews,items.point,items.org,items.rubrics,items.schedule,items.address,items.attribute_groups,"
+          "items.adm_div")
+SKIP_GROUPS = {"Способы оплаты", "Услуги", "Премия 2ГИС"}
 BISHKEK_BBOX = (74.45, 42.96, 74.76, 42.77)   # lon_left, lat_top, lon_right, lat_bottom
 RUBRICS = {"222": "Частные стоматологии", "112852": "Частные детские стоматологии",
            "226": "Стоматологические поликлиники"}
@@ -98,7 +100,14 @@ def normalize(item: Dict, rubric: str) -> Dict:
         "reviews_count": rev.get("general_review_count"),
         "org_rating": rev.get("org_rating"),
         "org_ratings_count": rev.get("org_review_count_with_stars"),
+        "district": next((a.get("name") for a in item.get("adm_div") or [] if a.get("type") == "district"), None),
+        "living_area": next((a.get("name", "").replace("\xa0", " ") for a in item.get("adm_div") or []
+                             if a.get("type") == "living_area"), None),
         "rubrics": sorted({r.get("name") for r in item.get("rubrics") or [] if r.get("name")}),
+        "services": [a.get("name") for g in item.get("attribute_groups") or [] if g.get("name") not in SKIP_GROUPS
+                     for a in g.get("attributes") or [] if a.get("name")],
+        "awards": [a.get("name") for g in item.get("attribute_groups") or [] if g.get("name") == "Премия 2ГИС"
+                   for a in g.get("attributes") or [] if a.get("name")],
         "rubric_source": RUBRICS[rubric],
         "is_24_7": _is_24_7(item),
     }

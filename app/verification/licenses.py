@@ -12,8 +12,9 @@ from typing import Dict, List, Optional, Tuple
 
 REGISTRY_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "registry"
 
-_STREET_WORDS = r"(улица|ул\.?|проспект|пр-т|пр\.?|бульвар|б-р|переулок|пер\.?|микрорайон|мкр\.?|мкрн\.?|" \
-                r"жилмассив|ж/м|городок|площадь|пл\.?|шоссе|тупик|туп\.?)"
+# Только целые слова: иначе «ул» вырезается из «Молдокулова», «пр» — из «Пржевальского»
+_STREET_WORDS = r"(?<![а-яa-z])(улица|ул|проспект|пр-т|пр|бульвар|бульв|б-р|переулок|пер|микрорайон|мкрн|мкр|" \
+                r"жилмассив|ж/м|городок|площадь|пл|шоссе|тупик|туп)(?![а-яa-z])\.?"
 _HOUSE = re.compile(r"(\d+[а-яa-z]?(?:/\d+[а-яa-z]?)?)")
 _GENERIC = {"осоо", "ип", "оф", "оао", "зао", "стоматология", "стоматологический", "стоматологическая",
             "стоматологии", "стоматологическое", "клиника", "клиники", "клиник", "центр", "медицинский",
@@ -163,16 +164,27 @@ def load_registry() -> Dict:
             "dental": [r for r in licenses["records"] if r["dental"]]}
 
 
+def _same_district(a: str, b: str) -> bool:
+    """«джал-29» (2ГИС) и «джал» (реестр) — один жилмассив, номер участка в реестре часто опускают."""
+    wa, wb = street_words(a), street_words(b)
+    base = lambda ws: {re.sub(r"-\d+$", "", w) for w in ws if re.search(r"[а-я]-\d+$", w)}
+    return bool(base(wa) & set(wb)) or bool(base(wb) & set(wa))
+
+
 def _address_match(street, house, rec) -> Optional[str]:
     if not street or not house or not rec.get("_street") or not rec.get("_house"):
         return None
     if not same_street(street, rec["_street"]):
+        if house == rec["_house"] and _same_district(street, rec["_street"]):
+            return "probable"
         return None
     if house == rec["_house"]:
         return "exact"
     if _main_number(house) == _main_number(rec["_house"]):
         return "same_building"
-    if rec["_house"].startswith(house) and len(rec["_house"]) - len(house) <= 2:
+    if "/" in house + rec["_house"] and house.replace("/", "") == rec["_house"].replace("/", ""):
+        return "probable"   # в реестре потерялась дробь: «Суюмбаева 102» вместо «10/2»
+    if len(house) >= 2 and rec["_house"].startswith(house) and len(rec["_house"]) - len(house) <= 2:
         return "probable"   # в реестре номер дома слился с номером помещения: «10618» вместо «106, оф. 18»
     return None
 
@@ -232,13 +244,29 @@ def _person_token(a: str, b: str) -> bool:
     return False
 
 
+def _person_parts(tokens: List[str]) -> Tuple[List[str], Optional[str]]:
+    """(фамилия и имя, отчество): отчество отдельно, иначе «Эргешовна» совпадёт с чужой фамилией «Эргешова»."""
+    names = [t for t in tokens if not _PATRONYMIC.search(t)]
+    pats = [t for t in tokens if _PATRONYMIC.search(t) and t not in ("уулу", "кызы")]
+    return names[:2], (pats[0] if pats else None)
+
+
 def _person_match(doctors: List[List[str]], rec) -> bool:
-    """ИП на имя врача клиники: совпали и фамилия, и имя."""
-    holder = rec["_tokens"]
+    """ИП на имя врача клиники: совпали и фамилия, и имя (порядок любой).
+    Опечатку («Видади»/«Вивади», «Ашымов»/«Ашимов») прощаем, только если совпало и отчество.
+    Братья и сёстры («Шукуров Эрбол» и «ИП Шукуров Уран Азизбекович») — разные люди."""
+    holder, h_pat = _person_parts(rec["_tokens"])
+    if len(holder) < 2:
+        return False
     for doc in doctors:
-        hits = sum(1 for t in doc if any(_person_token(t, h) for h in holder))
-        if hits >= 2:
-            return True
+        parts, d_pat = _person_parts(doc)
+        if len(parts) < 2:
+            continue
+        pat_ok = bool(h_pat and d_pat and _person_token(h_pat, d_pat))
+        for order in (holder, holder[::-1]):
+            exact = [_person_token(p, h) for p, h in zip(parts, order)]
+            if all(exact) or (pat_ok and all(e or similar(p, h) for e, p, h in zip(exact, parts, order))):
+                return True
     return False
 
 
@@ -265,20 +293,43 @@ def scope_gaps(services: List[str], scopes: List[str]) -> List[str]:
     return gaps
 
 
+def area_words(area: Optional[str]) -> str:
+    """«Асанбай м-н» → «асанбай», «12-й м-н» → «мкр12», «Кок-Жар ж/м» → «кок-жар»."""
+    a = _norm(area)
+    if not a:
+        return ""
+    num = re.match(r"(\d+)\s*-?\s*й?\s*(м-н|мкр|микрорайон)", a)
+    if num:
+        return "мкр" + num.group(1)
+    a = re.sub(r"\b(м-н|мкр\.?|микрорайон|ж/м|жилмассив|с\.|село)\b", " ", a)
+    return " ".join(w for w in a.split() if len(w) > 2)
+
+
+_STATE = re.compile(r"(поликлиника|больница)\s*№\s*\d|государствен|муниципальн|городская\s+(стоматологическая|клиническая)")
+
+
+def is_state_clinic(names: List[str]) -> bool:
+    """«Стоматологическая поликлиника №2» — муниципальная: в реестр частных лицензий она не попадает."""
+    return any(_STATE.search(_norm(n)) for n in names if n)
+
+
 def check_clinic(names: List[str], address: str, services: Optional[List[str]] = None,
-                 doctors: Optional[List[str]] = None) -> Dict:
-    return _check(tuple(names), address, tuple(services or ()), tuple(doctors or ()))
+                 doctors: Optional[List[str]] = None, area: Optional[str] = None) -> Dict:
+    return _check(tuple(names), address, tuple(services or ()), tuple(doctors or ()), area or "")
 
 
 @lru_cache(maxsize=4096)
-def _check(names: Tuple[str, ...], address: str, services: Tuple[str, ...], doctors: Tuple[str, ...]) -> Dict:
+def _check(names: Tuple[str, ...], address: str, services: Tuple[str, ...], doctors: Tuple[str, ...],
+           area: str = "") -> Dict:
     """Сверка с реестром: статус (см. LICENSE_LABELS), найденные записи, пробелы в профилях, «без лицензии»."""
     reg = load_registry()
     street, house = parse_address(address)
+    if area and street:
+        street = f"{street} {area_words(area)}".strip()   # реестр пишет то улицу, то микрорайон
     token_sets = [ts for ts in (name_tokens(n) for n in names if n) if ts]
     tokens = sorted({t for ts in token_sets for t in ts})
     weak_tokens = sorted({t for n in names if n for t in name_tokens(n, fallback=True)}) if not tokens else []
-    doctor_tokens = [name_tokens(d) for d in doctors]
+    doctor_tokens = [name_tokens(re.sub(r"\(.*?\)", " ", d)) for d in doctors]   # «Заплатина (Яценко) Ирина»
     words = street_words(street)
     pool = {id(r): r for key, recs in reg["street_index"].items()
             if any(w == key or (abs(len(w) - len(key)) <= 2 and not re.search(r"\d", w + key) and similar(w, key))
@@ -292,8 +343,9 @@ def _check(names: Tuple[str, ...], address: str, services: Tuple[str, ...], doct
     candidates = []
     for rec in pool.values():
         addr = _address_match(street, house, rec)
+        person = False
         if doctor_tokens and _person_match(doctor_tokens, rec):
-            name = 2
+            name, person = 2, True
         elif is_person(rec):
             # «Dr. Эмиль Дакенов» ≠ «Эшдолотов Эмиль»: для ИП нужно совпадение и фамилии, и имени
             name = 2 if token_sets and _person_match(token_sets, rec) else 0
@@ -304,7 +356,7 @@ def _check(names: Tuple[str, ...], address: str, services: Tuple[str, ...], doct
         if not addr and (name < 2 or not (any(_full_name_match(ts, rec) for ts in token_sets) or is_person(rec))):
             continue   # совпало одно слово названия по чужому адресу — слишком слабое совпадение
         if addr or name:
-            candidates.append({"record": rec, "address": addr, "name": name})
+            candidates.append({"record": rec, "address": addr, "name": name, "person": person})
 
     addr_points = {"exact": 3, "same_building": 2, "probable": 1}
 
@@ -321,14 +373,23 @@ def _check(names: Tuple[str, ...], address: str, services: Tuple[str, ...], doct
         status = "verified" if strong else "probable"
     elif best["address"]:
         status = "ambiguous" if len(at_address) >= 3 else "address_match"
+    elif best.get("person"):
+        status = "doctor_license"
     else:
         status = "name_other_address"
+    if is_state_clinic(list(names)):
+        status = "state"          # приказ МЗ КР №212: лицензируется только негосударственный сектор
 
     matched = [c for c in candidates if strength(c) == strength(best)] if best else []
     if status == "ambiguous":
         matched = matched[:3]
     scopes = sorted({x for c in matched for x in scope_of(c["record"]["activity"])})
     gaps = scope_gaps(list(services), scopes) if status in ("verified", "probable", "address_match") else []
+    if status == "state":
+        matched = [c for c in matched if c["address"] in ("exact", "same_building")][:3]
+    if status == "doctor_license":
+        matched = [c for c in candidates if c.get("person")][:3]
+        scopes = sorted({x for c in matched for x in scope_of(c["record"]["activity"])})
     unlicensed = [{"name": r["name"], "address": r["address"]} for r in reg["unlicensed"]["records"]
                   if r["dental"] and street and house and same_street(street, r.get("_street"))
                   and house == r.get("_house")]   # для такого серьёзного флага — только точный адрес
@@ -351,3 +412,10 @@ def _check(names: Tuple[str, ...], address: str, services: Tuple[str, ...], doct
                      "source_page": meta.get("source_page"),
                      "unlicensed_file": reg["unlicensed"]["meta"].get("source_file")},
     }
+
+
+def names_similarity(names_a: List[str], names_b: List[str]) -> int:
+    """0 — разные, 1 — похожи, 2 — совпадают (для привязки врача YDoc к клинике 2ГИС)."""
+    ta = {t for n in names_a if n for t in name_tokens(n, fallback=True)}
+    tb = {t for n in names_b if n for t in name_tokens(n, fallback=True)}
+    return max((_token_strength(a, b) for a in ta for b in tb), default=0)

@@ -116,7 +116,8 @@ _TYPE_RULES: List[Tuple[str, Tuple[str, ...]]] = [
 ]
 
 _COURSE_WORDS = ("курс", "мастер-класс", "мастер класс", "школа", "академи", "academy", "course", "training",
-                 "тренинг", "семинар", "hands-on", "workshop", "обучени", "стажировк", "program", "программа")
+                 "тренинг", "семинар", "hands-on", "workshop", "обучени", "стажировк", "program", "программа",
+                 "сертификат", "certificate", "master of", "мастер ")
 
 _TITLE_INFLATION = re.compile(
     r"\b(master|магистр|professor|профессор|академик|academician|doctor of|доктор наук|phd|ph\.d|diplomate|"
@@ -194,11 +195,13 @@ def check_credential(req: CredentialCheckRequest, today: Optional[date] = None) 
         soft.append("Звание вида «Master/Профессор/Эксперт» выдано курсом или организацией, а не вузом и не "
                     "аттестационной комиссией. Это маркетинговое название, а не учёная степень и не специализация.")
 
-    if not issuer and req.issuer and _GRAND_NAME.search(req.issuer):
+    academic = ctype in ("state_diploma", "postgrad", "specialist_cert", "academic_degree", "category")
+    if not issuer and req.issuer and _GRAND_NAME.search(req.issuer) and not academic:
+        # «Международная академия…» в названии курса — повод насторожиться; у вуза слово «университет» — норма
         msg = ("Громкое название эмитента («международная академия/институт»), которого нет в нашем справочнике. "
                "Проверьте, что организация существует: сайт, юридический адрес, аккредитация, список выпускников.")
         (soft if req.evidence_level <= 1 else warnings).append(msg)
-    elif not issuer and ctype not in ("award", "declared_specialty"):
+    elif not issuer and ctype not in ("award", "declared_specialty") and not academic:
         warnings.append("Эмитент не найден в справочнике — проверять придётся вручную.")
 
     if req.document_id and not (issuer and (issuer.get("locator") or issuer["kind"] in ("state", "degree_body"))):
