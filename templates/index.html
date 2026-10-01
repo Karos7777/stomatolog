@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Стоматолог Бишкек — Полный реестр лучших клиник, цены, образование и сертификаты</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦷</text></svg>">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar">
+    <div class="container top-bar-content">
+      <span>🇰🇬 Бишкек: Полный реестр клиник 2026 • Верифицированные дипломы, сертификаты и цены</span>
+      <div class="top-bar-links">
+        <button id="open-compare-btn" class="top-link-btn" style="display:none;">⚖️ Сравнить (<span id="compare-count">0</span>)</button>
+        <a href="#map-section">📍 Карта Бишкека</a>
+        <a href="tel:996312590003" class="emergency-link">🚑 Скорая помощь 24/7</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-container">
+      <div class="logo-area">
+        <span class="logo-icon">🦷</span>
+        <div>
+          <h1 class="logo-title">DentBishkek <span class="badge-smart">Pro Edition 2026</span></h1>
+          <p class="logo-sub">Честный рейтинг, пруфы сертификатов, оборудование и точные цены</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="open-calc-floating" class="btn btn-outline" style="margin-right: 8px;">
+          <span>🧮 Калькулятор сметы</span>
+        </button>
+        <button id="open-wizard-btn" class="btn btn-primary pulse-btn">
+          <span>🎯 Подобрать лучшего врача</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge">🎓 Пруфы образования врачей: КГМА, КРСУ, Германия, Швейцария, Южная Корея</div>
+        <h2 class="hero-title">Найдите лучшего стоматолога в Бишкеке с подтвержденной квалификацией</h2>
+        <p class="hero-desc">
+          Глубокий анализ стоматологий Бишкека: полные прайс-листы на все процедуры в сомах, проверка дипломов и международных сертификатов, микроскопы (Zeiss, Kaps) и честные отзывы пациентов.
+        </p>
+
+        <!-- Stats Bar -->
+        <div class="stats-row" id="stats-container">
+          <div class="stat-card">
+            <span class="stat-num" id="stat-clinics">15+</span>
+            <span class="stat-label">Проверенных клиник</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="stat-reviews">5,700+</span>
+            <span class="stat-label">Отзывов 2ГИС и YDoc</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="stat-rating">4.92</span>
+            <span class="stat-label">Средний рейтинг доверия</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">100%</span>
+            <span class="stat-label">Подтвержденные пруфы</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Search & Filter Controls -->
+  <section class="filter-section">
+    <div class="container">
+      <div class="filter-box">
+        <!-- Main Search Input -->
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Поиск по врачу, клинике, улице, оборудованию (Zeiss, iTero) или процедуре (Damon, Straumann, виниры, КТ)...">
+          <button id="clear-search-btn" class="clear-btn" style="display:none;">✕</button>
+        </div>
+
+        <!-- Filter Dropdowns Row -->
+        <div class="filter-row">
+          <div class="filter-col">
+            <label>Направление лечения:</label>
+            <select id="spec-filter">
+              <option value="Все">Все направления</option>
+              <option value="Терапия">Терапия (Кариес / Пульпит)</option>
+              <option value="Ортодонтия">Ортодонтия (Брекеты / Damon / Элайнеры)</option>
+              <option value="Имплантация">Имплантация (Straumann / Osstem)</option>
+              <option value="Детская">Детская стоматология без слез</option>
+              <option value="Виниры">Виниры E.max / Реставрация</option>
+              <option value="Острая зубная боль">Острая боль 24/7 (Неотложка)</option>
+              <option value="Хирургия">Сложное удаление зубов мудрости</option>
+            </select>
+          </div>
+
+          <div class="filter-col">
+            <label>Район Бишкека:</label>
+            <select id="district-filter">
+              <option value="Все">Все районы Бишкека</option>
+              <option value="Центр / Первомайский">Центр / Первомайский (Исанова, Боконбаева, Киевская)</option>
+              <option value="Октябрьский / Южные мкрн">Октябрьский / Южные мкрн (Ахунбаева, 3-й мкрн, Магистраль)</option>
+              <option value="7-й микрорайон">7-й микрорайон (Юнусалиева / Бета-2)</option>
+              <option value="Ленинский / Джал">Ленинский / Джал (Манаса, Джал-23)</option>
+              <option value="Свердловский / Восток-5">Свердловский / Восток-5 / Аламедин-1</option>
+            </select>
+          </div>
+
+          <div class="filter-col">
+            <label>Ценовая категория:</label>
+            <select id="budget-filter">
+              <option value="Все">Любой бюджет</option>
+              <option value="эконом">Эконом (Доступные честные цены)</option>
+              <option value="комфорт">Комфорт (Баланс цены и оборудования)</option>
+              <option value="премиум">Премиум (Экспертный класс, Zeiss, CAD/CAM)</option>
+            </select>
+          </div>
+
+          <div class="filter-col">
+            <label>Сортировка:</label>
+            <select id="sort-filter">
+              <option value="bayesian">🏆 Честный рейтинг (Байес доверие)</option>
+              <option value="rating">⭐ По оценке (5.0 → 1.0)</option>
+              <option value="reviews">💬 По количеству отзывов</option>
+              <option value="experience">👨‍⚕️ По стажу врача (лет)</option>
+              <option value="price_asc">💰 Сначала наиболее доступные</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Toggles -->
+        <div class="quick-tags">
+          <span class="quick-label">Быстрые выборки:</span>
+          <button class="tag-btn" data-tag="24/7">🚨 Круглосуточно 24/7</button>
+          <button class="tag-btn" data-tag="Микроскоп">🔬 Микроскоп (Zeiss / Kaps)</button>
+          <button class="tag-btn" data-tag="Дети">🧸 Детский прием без боли</button>
+          <button class="tag-btn" data-tag="Седация">💤 Лечение во сне (Севоран)</button>
+          <button class="tag-btn" data-tag="Straumann">🇨🇭 Импланты Straumann</button>
+          <button class="tag-btn" data-tag="Damon">🦷 Брекеты Damon Q</button>
+          <button class="tag-btn" data-tag="КГМА">🎓 Выпускники КГМА</button>
+          <button class="tag-btn" data-tag="КРСУ">🎓 Выпускники КРСУ</button>
+        </div>
+
+        <!-- Anti-Fake / Consumer Protection Notice -->
+        <div class="antifake-banner">
+          <div class="antifake-header">
+            <span class="antifake-icon">🛡️</span>
+            <div>
+              <strong>Анти-фейк памятка: Как не попасть на липовые сертификаты и накрученные отзывы в Бишкеке</strong>
+              <div class="antifake-sub">Отличайте государственные лицензии МЗ КР от коммерческих 2-дневных семинаров в рамочках на стене.</div>
+            </div>
+            <button id="toggle-antifake-btn" class="antifake-toggle-btn">Инструкция проверки ▼</button>
+          </div>
+          <div id="antifake-content" class="antifake-dropdown" style="display:none;">
+            <div class="antifake-grid">
+              <div class="antifake-item">
+                <div class="antifake-item-title">1. Диплом ВУЗа vs Сертификат семинара</div>
+                <div class="antifake-item-desc">Красивые дипломы на английском от Straumann/Osstem/Ormco — это платные мастер-классы выходного дня (1-3 дня). Они подтверждают лишь посещение лекции производителя. Лечить и оперировать дает право <strong>только государственная ординатура КГМА/КРСУ</strong>.</div>
+              </div>
+              <div class="antifake-item">
+                <div class="antifake-item-title">2. Разрешение Минздрава КР на манипуляции</div>
+                <div class="antifake-item-desc">Врач-терапевт по закону КР <strong>НЕ имеет права</strong> ставить брекеты или импланты без ординатуры по ортодонтии или хирургии. Требуйте показать сертификат специалиста по конкретному профилю.</div>
+              </div>
+              <div class="antifake-item">
+                <div class="antifake-item-title">3. Заводской паспорт и наклейка импланта</div>
+                <div class="antifake-item-desc">При установке импланта клиника <strong>обязана выдать паспорт с индивидуальной наклейкой</strong> и серийным номером завода-изготовителя (Швейцария/Корея). Если паспорт не дают — высок риск установки дешевой подделки!</div>
+              </div>
+              <div class="antifake-item">
+                <div class="antifake-item-title">4. Договор и кассовый чек</div>
+                <div class="antifake-item-desc">Всегда требуйте официальный чек и гарантийный талон с подписью главного врача. Без договора при возникновении осложнений доказать вину врача в суде или Минздраве будет практически невозможно.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- View Switcher & Counter -->
+  <section class="results-header-section">
+    <div class="container results-header-container">
+      <div class="results-counter">
+        В реестре: <strong id="results-count">0</strong> лучших клиник и врачей Бишкека
+      </div>
+      <div class="view-toggles">
+        <button id="view-cards-btn" class="toggle-view-btn active">🗂️ Карточки врачей</button>
+        <button id="view-map-btn" class="toggle-view-btn">🗺️ Карта Бишкека</button>
+        <button id="view-split-btn" class="toggle-view-btn">⚡ Карта + Карточки</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Layout (Map & Grid) -->
+  <main class="container main-content-wrapper">
+    <!-- Map Container -->
+    <div id="map-section" class="map-container-box">
+      <div class="map-header">
+        <span>📍 Интерактивная карта стоматологий Бишкека (Точные адреса)</span>
+        <span class="map-hint">Кликните по маркеру клиники для просмотра контактов и прайса</span>
+      </div>
+      <div id="bishkek-map"></div>
+    </div>
+
+    <!-- Dentists Cards Grid -->
+    <div id="dentists-grid" class="dentists-grid">
+      <!-- Injected by JavaScript -->
+    </div>
+  </main>
+
+  <!-- Interactive Wizard Modal (Мастер подбора) -->
+  <div id="wizard-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span class="modal-icon">🎯</span>
+          <div>
+            <h3>Мастер идеального подбора стоматолога</h3>
+            <p>Система рассчитает индивидуальный Match Score для вашей ситуации</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="close-wizard-btn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Step 1 -->
+        <div class="wizard-step" id="wizard-step-1">
+          <div class="step-indicator">Шаг 1 из 3 • Что вас беспокоит?</div>
+          <h4 class="step-question">Какая стоматологическая услуга вам требуется?</h4>
+          
+          <div class="options-grid">
+            <label class="option-card">
+              <input type="radio" name="w_problem" value="кариес" checked>
+              <div class="option-inner">
+                <span class="opt-icon">🦷</span>
+                <span class="opt-title">Лечение кариеса / пульпит</span>
+                <span class="opt-desc">Пломба, каналы под микроскопом Karl Kaps / Zeiss</span>
+              </div>
+            </label>
+
+            <label class="option-card">
+              <input type="radio" name="w_problem" value="брекеты">
+              <div class="option-inner">
+                <span class="opt-icon">✨</span>
+                <span class="opt-title">Исправление прикуса</span>
+                <span class="opt-desc">Брекеты Damon Q, элайнеры, 3D-сканирование iTero</span>
+              </div>
+            </label>
+
+            <label class="option-card">
+              <input type="radio" name="w_problem" value="имплант">
+              <div class="option-inner">
+                <span class="opt-icon">🔩</span>
+                <span class="opt-title">Имплантация зубов</span>
+                <span class="opt-desc">Straumann, Osstem, навигационная хирургия, All-on-4</span>
+              </div>
+            </label>
+
+            <label class="option-card">
+              <input type="radio" name="w_problem" value="удаление">
+              <div class="option-inner">
+                <span class="opt-icon">⚡</span>
+                <span class="opt-title">Удаление зуба мудрости</span>
+                <span class="opt-desc">Сложная атравматичная хирургия ЧЛХ без боли</span>
+              </div>
+            </label>
+
+            <label class="option-card">
+              <input type="radio" name="w_problem" value="дети">
+              <div class="option-inner">
+                <span class="opt-icon">🧸</span>
+                <span class="opt-title">Детский стоматолог</span>
+                <span class="opt-desc">Адаптация без слез, игровая комната, цветные пломбы</span>
+              </div>
+            </label>
+
+            <label class="option-card">
+              <input type="radio" name="w_problem" value="виниры">
+              <div class="option-inner">
+                <span class="opt-icon">💎</span>
+                <span class="opt-title">Виниры E.max и эстетика</span>
+                <span class="opt-desc">Голливудская улыбка, биомиметика, отбеливание Flash</span>
+              </div>
+            </label>
+
+            <label class="option-card option-urgent">
+              <input type="radio" name="w_problem" value="острая боль срочно">
+              <div class="option-inner">
+                <span class="opt-icon">🚑</span>
+                <span class="opt-title">Острая зубная боль (24/7)</span>
+                <span class="opt-desc">Экстренная помощь ночью, снятие боли, дежурный хирург</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="wizard-nav">
+            <div></div>
+            <button class="btn btn-primary" id="wizard-next-1">Далее →</button>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="wizard-step" id="wizard-step-2" style="display:none;">
+          <div class="step-indicator">Шаг 2 из 3 • Локация и бюджет</div>
+          <h4 class="step-question">Где вам удобнее и на какой бюджет ориентируетесь?</h4>
+
+          <div class="form-group">
+            <label class="form-label">Предпочитаемый район Бишкека:</label>
+            <select id="w_district" class="custom-select">
+              <option value="Все">Не имеет значения (главное — высшая квалификация врача)</option>
+              <option value="Центр / Первомайский">Центр / Первомайский (Исанова, Боконбаева, Киевская)</option>
+              <option value="Октябрьский / Южные мкрн">Октябрьский / Южные мкрн (Ахунбаева, 3-й мкрн, Магистраль)</option>
+              <option value="7-й микрорайон">7-й микрорайон (Юнусалиева / Бета-2)</option>
+              <option value="Ленинский / Джал">Ленинский / Джал (пр. Манаса, мкрн Джал-23)</option>
+              <option value="Свердловский / Восток-5">Свердловский / Восток-5 / Аламедин-1</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 20px;">
+            <label class="form-label">Ценовая категория:</label>
+            <div class="price-options">
+              <label class="price-pill">
+                <input type="radio" name="w_price" value="Все" checked>
+                <span>Любой бюджет</span>
+              </label>
+              <label class="price-pill">
+                <input type="radio" name="w_price" value="эконом">
+                <span>Эконом (Доступный)</span>
+              </label>
+              <label class="price-pill">
+                <input type="radio" name="w_price" value="комфорт">
+                <span>Комфорт (Баланс качества)</span>
+              </label>
+              <label class="price-pill">
+                <input type="radio" name="w_price" value="премиум">
+                <span>Премиум (Экспертный класс)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="wizard-nav">
+            <button class="btn btn-secondary" id="wizard-back-2">← Назад</button>
+            <button class="btn btn-primary" id="wizard-next-2">Далее →</button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="wizard-step" id="wizard-step-3" style="display:none;">
+          <div class="step-indicator">Шаг 3 из 3 • Ваш главный приоритет</div>
+          <h4 class="step-question">Что для вас имеет первостепенное значение?</h4>
+
+          <div class="priority-options">
+            <label class="priority-card">
+              <input type="radio" name="w_priority" value="reputation" checked>
+              <div class="prio-inner">
+                <div class="prio-title">🏆 Максимальный рейтинг и проверенные пруфы образования</div>
+                <div class="prio-sub">Высшая категория Минздрава, стаж 15+ лет, сотни реальных отзывов 2ГИС</div>
+              </div>
+            </label>
+
+            <label class="priority-card">
+              <input type="radio" name="w_priority" value="technology">
+              <div class="prio-inner">
+                <div class="prio-title">🔬 Передовые технологии и микроскопы</div>
+                <div class="prio-sub">Лечение под увеличением Zeiss / Karl Kaps, томографы Vatech 3D, сканеры iTero</div>
+              </div>
+            </label>
+
+            <label class="priority-card">
+              <input type="radio" name="w_priority" value="price">
+              <div class="prio-inner">
+                <div class="prio-title">💰 Честная и выгодная цена без переплат</div>
+                <div class="prio-sub">Оптимальная смета лечения без навязывания ненужных манипуляций</div>
+              </div>
+            </label>
+
+            <label class="priority-card">
+              <input type="radio" name="w_priority" value="proximity">
+              <div class="prio-inner">
+                <div class="prio-title">📍 Близость к выбранному району</div>
+                <div class="prio-sub">Клиника в максимальной шаговой или транспортной доступности</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="wizard-nav">
+            <button class="btn btn-secondary" id="wizard-back-3">← Назад</button>
+            <button class="btn btn-primary pulse-btn" id="wizard-submit">🔍 Рассчитать лучший результат</button>
+          </div>
+        </div>
+
+        <!-- Results Step -->
+        <div class="wizard-step" id="wizard-results" style="display:none;">
+          <div class="results-badge-wrap">
+            <span class="match-champ-tag">🎉 Идеальное совпадение найдено</span>
+          </div>
+          <div id="wizard-recommendation-content">
+            <!-- Injected by JavaScript -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Dentist Details Modal / Drawer -->
+  <div id="details-modal" class="modal-overlay">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <img id="detail-doctor-img" src="" alt="Doctor" class="modal-doctor-photo" style="display:none;">
+          <span class="modal-icon" id="detail-badge-icon">🦷</span>
+          <div>
+            <h3 id="detail-name">Доктор</h3>
+            <p id="detail-clinic">Клиника</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="close-details-btn">✕</button>
+      </div>
+
+      <!-- Detail Navigation Tabs -->
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" data-tab="tab-prices">📋 Полный прайс-лист</button>
+        <button class="modal-tab-btn" data-tab="tab-education">🎓 Образование и сертификаты</button>
+        <button class="modal-tab-btn" data-tab="tab-audit">⚠️ Аудит рисков и жалобы</button>
+        <button class="modal-tab-btn" data-tab="tab-equipment">🔬 Оборудование клиники</button>
+        <button class="modal-tab-btn" data-tab="tab-calculator">🧮 Калькулятор сметы</button>
+        <button class="modal-tab-btn" data-tab="tab-reviews">💬 Отзывы пациентов</button>
+      </div>
+
+      <div class="modal-body" id="details-modal-body">
+        <!-- Injected by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Modal -->
+  <div id="compare-modal" class="modal-overlay">
+    <div class="modal-card modal-large" style="max-width: 950px;">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span class="modal-icon">⚖️</span>
+          <div>
+            <h3>Сравнение выбранных клиник Бишкека</h3>
+            <p>Сопоставление цен на популярные услуги, квалификации врачей и оборудования</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="close-compare-modal-btn">✕</button>
+      </div>
+      <div class="modal-body" id="compare-modal-body">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Standalone Treatment Calculator Modal -->
+  <div id="calc-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span class="modal-icon">🧮</span>
+          <div>
+            <h3>Калькулятор стоимости лечения зубов в Бишкеке</h3>
+            <p>Выберите нужные процедуры для расчета ориентировочной сметы в сомах</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="close-calc-modal-btn">✕</button>
+      </div>
+      <div class="modal-body" id="calc-modal-body">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <div class="footer-brand">🦷 DentBishkek Pro</div>
+        <p class="footer-text">Независимый агрегатор и интеллектуальная система подбора стоматологов в Бишкеке. Проверенные цены, подтвержденные сертификаты Минздрава КР и международных институтов.</p>
+      </div>
+      <div class="footer-links">
+        <div><strong>Город:</strong> Бишкек, Кыргызская Республика</div>
+        <div><strong>Верификация:</strong> 2ГИС, YDoc, реестры КГМА и КРСУ</div>
+        <div><strong>Консольный режим:</strong> <code>python main.py --cli</code></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2026 DentBishkek. Все права защищены. Здоровье вашей улыбки в надежных руках.
+    </div>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- App JS -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

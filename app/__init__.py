@@ -1,0 +1,1 @@
+# Stomatolog Bishkek App package
