@@ -7,6 +7,8 @@ from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from collections import Counter
+
 from app.database import load_legacy_audit, repo
 from app.importers import parse_reviews
 from app.matching import TOPICS, coverage, match
@@ -15,6 +17,7 @@ from app.models import (EVIDENCE_LEVELS, Clinic, CredentialCheckRequest, Credent
 from app.scoring import WEIGHTS, city_prior, rank
 from app.verification.credentials import CLAIM_TYPES, check_credential
 from app.verification.issuers import VERIFY_LINKS
+from app.verification.licenses import load_registry
 from app.verification.reviews import REFERENCES, analyze_reviews
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,6 +35,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 def _clinic_payload(clinic: Clinic) -> Dict:
     data = clinic.model_dump()
     data["gis_url"] = clinic.gis_url
+    data["license"]["label"] = clinic.license.label
     data["all_sources"] = [s.model_dump() for s in clinic.all_sources()]
     return data
 
@@ -50,6 +54,12 @@ def _row(r: Dict, full: bool = False) -> Dict:
         "website": clinic.website,
         "phones": clinic.phones,
         "services": clinic.services,
+        "curated": clinic.curated,
+        "multi_profile": clinic.multi_profile,
+        "license": {"status": clinic.license.status, "label": clinic.license.label,
+                    "holder": clinic.license.matches[0].holder if clinic.license.matches else None,
+                    "number": clinic.license.matches[0].number if clinic.license.matches else None,
+                    "unlicensed_at_address": bool(clinic.license.unlicensed_at_address)},
         "trust_index": score["trust_index"],
         "rating": score["rating"],
         "volume": score["volume"],
@@ -68,8 +78,17 @@ def _row(r: Dict, full: bool = False) -> Dict:
     return out
 
 
+_cache: Dict = {"version": None, "ranked": None}
+
+
 def _ranked() -> List[Dict]:
-    return rank(repo.all(), repo.analyses())
+    """Рейтинг считается один раз и пересчитывается, когда меняются данные или анализы отзывов."""
+    analyses = repo.analyses()
+    key = (repo.version, tuple(sorted((k, v.authenticity_index) for k, v in analyses.items())))
+    if _cache["version"] != key:
+        _cache["ranked"] = rank(repo.all(), analyses)
+        _cache["version"] = key
+    return _cache["ranked"]
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -82,32 +101,54 @@ async def home_page(request: Request):
 def get_meta():
     ranked = _ranked()
     rated = [r for r in ranked if r["score"]["trust_index"] is not None]
+    statuses = Counter(r["clinic"].license.status for r in ranked)
+    big = [r for r in rated if (r["score"]["volume"] or 0) >= 100]
     return {
         **repo.meta,
+        "gis": repo.gis_meta,
+        "registry": load_registry()["licenses"]["meta"],
         "clinics_total": len(ranked),
+        "clinics_curated": sum(1 for r in ranked if r["clinic"].curated),
         "clinics_ranked": len(rated),
-        "rating_observations": sum(len(r["clinic"].ratings) for r in ranked),
-        "licenses_verified": sum(1 for r in ranked if r["clinic"].license.status == "verified"),
+        "license_statuses": dict(statuses),
+        "licenses_found": statuses.get("verified", 0) + statuses.get("probable", 0) + statuses.get("address_match", 0),
+        "unlicensed_at_address": sum(1 for r in ranked if r["clinic"].license.unlicensed_at_address),
         "with_review_analysis": sum(1 for r in ranked if r["score"]["has_review_analysis"]),
+        "perfect_big": {"clinics_100plus": len(big), "with_5_0": sum(1 for r in big if r["score"]["rating"] >= 4.95)},
         "city_prior": city_prior(repo.all()),
         "weights": WEIGHTS,
         "topics": {k: v["label"] for k, v in TOPICS.items()},
     }
 
 
+LICENSE_FILTERS = {
+    "found": {"verified", "probable", "address_match"},
+    "problems": {"not_found", "name_other_address"},
+}
+
+
 @app.get("/api/clinics")
 def list_clinics(q: Optional[str] = None, topic: Optional[str] = None, only_24_7: bool = False,
-                 sort: str = "trust"):
+                 sort: str = "trust", dental_only: bool = True, min_volume: int = 0,
+                 license: Optional[str] = None, limit: int = 50, offset: int = 0):
     rows = _ranked()
     if q:
         ql = q.lower().strip()
         rows = [r for r in rows if ql in " ".join([
             r["clinic"].name, r["clinic"].address, " ".join(r["clinic"].services),
-            " ".join(d.name for d in r["clinic"].doctors)]).lower()]
+            " ".join(d.name for d in r["clinic"].doctors), " ".join(r["clinic"].aliases)]).lower()]
     if topic and topic in TOPICS:
         rows = [r for r in rows if coverage(r["clinic"], [topic])["value"] > 0]
     if only_24_7:
         rows = [r for r in rows if r["clinic"].is_24_7]
+    if dental_only:
+        rows = [r for r in rows if not r["clinic"].multi_profile]
+    if min_volume:
+        rows = [r for r in rows if (r["score"]["volume"] or 0) >= min_volume]
+    if license in LICENSE_FILTERS:
+        rows = [r for r in rows if r["clinic"].license.status in LICENSE_FILTERS[license]]
+    elif license == "unlicensed":
+        rows = [r for r in rows if r["clinic"].license.unlicensed_at_address]
     keyfuncs = {
         "rating": lambda r: (r["score"]["rating"] is None, -(r["score"]["rating"] or 0), -(r["score"]["volume"] or 0)),
         "volume": lambda r: -(r["score"]["volume"] or 0),
@@ -115,7 +156,9 @@ def list_clinics(q: Optional[str] = None, topic: Optional[str] = None, only_24_7
     }
     if sort in keyfuncs:
         rows = sorted(rows, key=keyfuncs[sort])
-    return [_row(r) for r in rows]
+    limit = max(1, min(limit, 600))
+    return {"total": len(rows), "offset": offset,
+            "items": [_row(r) for r in rows[offset:offset + limit]]}
 
 
 @app.get("/api/clinics/{clinic_id}")

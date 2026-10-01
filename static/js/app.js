@@ -8,7 +8,7 @@ const fmt = (n, d = 1) => (n === null || n === undefined ? "—" : Number(n).toF
 const COMPONENT_LABELS = {
   rating: "Рейтинг с поправкой на объём",
   authenticity: "Подлинность отзывов",
-  credentials: "Подтверждённая квалификация",
+  credentials: "Лицензия и квалификация",
   transparency: "Прозрачность",
 };
 const VIA_LABELS = {
@@ -66,17 +66,19 @@ function setupTabs() {
 /* ------------------------------------------------------------ шапка */
 async function loadMeta() {
   const m = await api("/api/meta");
-  $("#notice-text").innerHTML = `Каждая цифра — со ссылкой на источник. Рейтинги взяты из открытой поисковой выдачи
-    на ${esc(m.collected_at)} (прямой доступ к 2ГИС был закрыт) — сверяйте по ссылке «Открыть в 2ГИС».
-    <strong>Лицензии МЗ КР пока не сверены ни у одной клиники</strong> — статус «не проверено», а не «есть».
-    Отзывы по текстам не анализировались: загрузите их на вкладке «Проверить отзывы».`;
+  const big = m.perfect_big || {};
+  $("#notice-text").innerHTML = `Рейтинги и адреса — из официального API 2ГИС на ${esc(m.gis?.fetched || m.collected_at)}
+    (${m.clinics_total} стоматологий Бишкека). Лицензии сверены с реестром Минздрава КР на ${esc(m.registry?.as_of || "—")}:
+    найдены у ${m.licenses_found}, у ${m.license_statuses?.not_found || 0} — нет в реестре.
+    <strong>Тексты отзывов 2ГИС через API не отдаёт</strong>, поэтому накрутка по текстам проверяется на вкладке «Проверить отзывы»;
+    по цифрам видно другое: у ${big.with_5_0 || 0} из ${big.clinics_100plus || 0} клиник со 100+ оценками ровно 5.0 — для медицины это статистически нетипично, такие клиники помечены.`;
   $("#stats").innerHTML = [
-    [m.clinics_total, "клиник с источниками"],
-    [m.clinics_ranked, "с рейтингом"],
-    [m.rating_observations, "наблюдений рейтинга"],
-    [m.licenses_verified, "лицензий сверено"],
-    [m.with_review_analysis, "клиник с разбором отзывов"],
-    [m.collected_at, "дата сбора"],
+    [m.clinics_total, "стоматологий в рейтинге"],
+    [m.licenses_found, "лицензий найдено в реестре"],
+    [m.license_statuses?.not_found || 0, "нет в реестре МЗ"],
+    [m.unlicensed_at_address, "по адресу МЗ нашёл работу без лицензии"],
+    [m.clinics_curated, "клиник изучено вручную"],
+    [m.registry?.as_of || "—", "дата реестра МЗ"],
   ].map(([v, l]) => `<div class="stat"><span>${esc(v)}</span><small>${esc(l)}</small></div>`).join("");
 }
 
@@ -90,6 +92,7 @@ function clinicCard(r, compact = false, place = null) {
       <div class="clinic-info">
         <h3>${esc(r.name)} ${r.is_24_7 ? '<span class="chip info">24/7</span>' : ""}</h3>
         <div class="muted">${esc(r.address)}${r.district ? " · " + esc(r.district) : ""}</div>
+        ${r.license?.number ? `<div class="small muted">Лицензия ${esc(r.license.number)} · ${esc(r.license.holder)}</div>` : ""}
         <div class="chips">${flagChips(r.flags)}</div>
         ${r.reasons ? `<ul class="reasons">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
       </div>
@@ -109,17 +112,29 @@ function clinicCard(r, compact = false, place = null) {
   </article>`;
 }
 
-async function loadList() {
-  const params = new URLSearchParams({ sort: $("#sort").value });
+let listOffset = 0;
+const PAGE = 30;
+
+function listParams() {
+  const params = new URLSearchParams({ sort: $("#sort").value, limit: PAGE, offset: listOffset });
   if ($("#q").value.trim()) params.set("q", $("#q").value.trim());
   if ($("#topic").value) params.set("topic", $("#topic").value);
+  if ($("#license").value) params.set("license", $("#license").value);
+  if ($("#minvol").value) params.set("min_volume", $("#minvol").value);
   if ($("#only247").checked) params.set("only_24_7", "true");
-  const rows = await api(`/api/clinics?${params}`);
-  const ranked = rows.filter((r) => r.trust_index !== null);
-  const unranked = rows.filter((r) => r.trust_index === null);
-  $("#list").innerHTML = ranked.length ? ranked.map((r) => clinicCard(r)).join("") : '<div class="placeholder">Ничего не найдено.</div>';
-  $("#unranked").innerHTML = unranked.map((r) => clinicCard(r, true)).join("");
-  $("#unranked-title").hidden = $("#unranked-hint").hidden = !unranked.length;
+  if ($("#withmulti").checked) params.set("dental_only", "false");
+  return params;
+}
+
+async function loadList(append = false) {
+  if (!append) listOffset = 0;
+  const res = await api(`/api/clinics?${listParams()}`);
+  const html = res.items.map((r) => clinicCard(r)).join("");
+  if (append) $("#list").insertAdjacentHTML("beforeend", html);
+  else $("#list").innerHTML = html || '<div class="placeholder">Ничего не найдено.</div>';
+  listOffset += res.items.length;
+  $("#list-count").textContent = `Показано ${listOffset} из ${res.total}`;
+  $("#more").hidden = listOffset >= res.total;
 }
 
 /* ------------------------------------------------------------ доказательства */
@@ -162,16 +177,34 @@ async function openClinic(id) {
       <div class="small">Источники: ${doc.sources.map(sourceLink).join(" · ")}</div></div>`;
   }).join("") || '<p class="muted">В найденных источниках врачи не названы. Спросите в клинике ФИО врача и документы об ординатуре по нужной специальности.</p>';
 
-  const licenseLinks = [
-    ["Реестр лицензий МЗ КР", "https://license.med.kg/ru/"],
-    ["Түндүк: лицензия по ИНН", "https://portal.tunduk.kg/public_services/opisanie/6323917"],
-    ["Поиск юрлица (osoo.kg)", "https://www.osoo.kg/"],
-  ].map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${t} ↗</a>`).join("");
-  const licStatus = { verified: "подтверждена в реестре", not_found: "НЕ найдена в реестре", not_checked: "не проверена" }[c.license.status];
+  const L = c.license;
+  const licMatches = L.matches.map((m) => `<div class="lic">
+      <div><b>${esc(m.number)}</b> — ${esc(m.holder)}</div>
+      <div class="small muted">${esc(m.address)} · выдана ${esc(m.issued || "—")}${m.chairs ? ` · кресел: ${m.chairs}` : ""}
+        · совпало: ${[m.match.address ? "адрес" : "", m.match.name ? "название (" + esc(m.match.name) + ")" : ""].filter(Boolean).join(", ") || "—"}</div>
+      <div class="small">Виды помощи: ${esc(m.scope.join(", ") || "—")}</div>
+      <details class="small"><summary>Текст лицензии</summary>${esc(m.activity)}</details></div>`).join("");
+  const licClass = { verified: "green", probable: "green", address_match: "yellow", ambiguous: "yellow",
+    name_other_address: "yellow", not_found: "red", not_checked: "yellow" }[L.status];
+  const licenseHtml = `
+    <div class="verdict-line"><span class="chip ${licClass}">${esc(L.label)}</span>
+      <span class="muted small">реестр МЗ КР на ${esc(L.registry.as_of || "—")}, сверка автоматическая по адресу и названию</span></div>
+    ${licMatches}
+    ${L.other_licensees_at_address ? `<p class="small muted">По этому адресу ещё ${L.other_licensees_at_address} стоматологических лицензиатов.</p>` : ""}
+    ${L.scope_gaps.length ? `<ul class="flags warn"><li>Клиника указывает услуги, которых нет в тексте лицензии: ${esc(L.scope_gaps.join(", "))}. Возможно, есть приложение к лицензии — спросите его.</li></ul>` : ""}
+    ${L.unlicensed_at_address.length ? `<ul class="flags bad"><li>Минздрав включил в список работающих <b>без лицензии</b> стоматологов по этому адресу: ${esc(L.unlicensed_at_address.map((u) => u.name).join(", "))}. В одном здании бывает несколько кабинетов — спросите, кто будет лечить и по какой лицензии.</li></ul>` : ""}
+    ${L.status === "not_found" ? `<p class="small">Нет в реестре — повод спросить номер лицензии. Это не доказательство работы без неё: реестр может не учитывать старые лицензии, а клиника — работать под другим юрлицом.</p>` : ""}
+    <div class="links">
+      ${L.registry.source_file ? `<a href="${esc(L.registry.source_file)}" target="_blank" rel="noopener">Реестр лицензий МЗ КР (xlsx) ↗</a>` : ""}
+      ${L.registry.unlicensed_file ? `<a href="${esc(L.registry.unlicensed_file)}" target="_blank" rel="noopener">Список работающих без лицензии ↗</a>` : ""}
+      <a href="https://med.kg/lisenzirovanie?locale=ru" target="_blank" rel="noopener">Страница лицензирования МЗ ↗</a>
+      <a href="https://portal.tunduk.kg/public_services/opisanie/6323917" target="_blank" rel="noopener">Түндүк: по ИНН ↗</a>
+    </div>`;
 
   $("#modal-body").innerHTML = `
     <h2>${esc(c.name)}</h2>
     <div class="muted">${esc(c.address)}${c.legal_name ? " · " + esc(c.legal_name) : ""}${c.inn ? " · ИНН " + esc(c.inn) : ""}</div>
+    ${c.curated ? "" : `<div class="small muted">Карточка собрана автоматически из API 2ГИС и реестра МЗ; вручную не изучалась.</div>`}
     <div class="chips">${flagChips(d.flags)}</div>
     <div class="contact">${c.phones.map((p) => `<a href="tel:${esc(p.replace(/[^+\d]/g, ""))}">${esc(p)}</a>`).join(" · ")}
       ${c.hours ? ` · ${esc(c.hours)}` : ""}</div>
@@ -183,13 +216,10 @@ async function openClinic(id) {
 
     <h3>Откуда рейтинг</h3>
     ${c.ratings.length ? `<div class="table-wrap"><table><thead><tr><th>Площадка</th><th>Рейтинг</th><th>Оценок</th><th>Отзывов</th><th>Источник</th></tr></thead><tbody>${ratingRows}</tbody></table></div>
-      <p class="hint">Если сводки расходятся, берём меньшие значения. Цифры из поисковой выдачи могут отставать от живой карточки — откройте её и сверьте.</p>`
+      <p class="hint">В расчёт идут данные из API 2ГИС (самые надёжные); поисковые сводки показаны для истории. «Оценок» — все звёзды, «отзывов» — только с текстом.</p>`
       : '<p class="muted">Рейтинг найти не удалось.</p>'}
 
-    <h3>Лицензия МЗ КР: ${esc(licStatus)}</h3>
-    <p>${c.inn ? `ИНН юрлица известен (${esc(c.inn)}) — введите его в Түндүк, чтобы увидеть лицензию и разрешённые виды помощи.` : "ИНН неизвестен: попросите его в клинике (он есть в договоре и на чеке) и проверьте лицензию."}
-    В 2025 году Минздрав нашёл 138 частных кабинетов без лицензии из 250 проверенных — проверка не формальность.</p>
-    <div class="links">${licenseLinks}</div>
+    <h3>Лицензия Минздрава</h3>${licenseHtml}
 
     <h3>Врачи и их квалификация</h3>${doctors}
 
@@ -204,7 +234,7 @@ async function openClinic(id) {
 
     <h3>Перед визитом</h3>
     <ol class="checklist">
-      <li>Проверьте лицензию по ИНН и что в ней есть нужный вам вид помощи (наркоз/седация — отдельно).</li>
+      <li>Попросите показать лицензию и сверьте номер с блоком выше: в ней должен быть нужный вам вид помощи (наркоз/седация — отдельно) и адрес клиники.</li>
       <li>Спросите ФИО врача и покажите ему: «покажите диплом ординатуры/сертификат специалиста по этой специальности».</li>
       <li>Курсы производителей (Straumann, Osstem, Ormco…) — это 1–5 дней обучения, а не специализация.</li>
       <li>Прочитайте 10 последних отзывов с оценкой 1–3★ и раздел «Неподтверждённые» в 2ГИС.</li>
@@ -303,8 +333,12 @@ async function loadMethod() {
     <h3>2. Подлинность отзывов</h3>
     <p>Если отзывы загружены — считаем 8 независимых признаков (ниже). Если нет — ставим нейтральные 70 и снижаем только за очевидные аномалии (почти 100% пятёрок при сотне оценок, расхождение площадок, неподтверждённые отзывы 2ГИС). Уверенность в этом случае низкая.</p>
     <ul>${Object.entries(m.review_references).map(([k, v]) => `<li>${esc(v)}</li>`).join("")}</ul>
-    <h3>3. Квалификация</h3>
-    <p>Лицензия, подтверждённая в реестре, даёт больше всего. Каждое заявление о квалификации проверяется по типу документа и уровню доказанности:</p>
+    <h3>3. Лицензия и квалификация</h3>
+    <p>Каждая клиника автоматически сверяется с <a href="https://med.kg/lisenzirovanie?locale=ru" target="_blank" rel="noopener">официальным реестром лицензий Минздрава КР</a>
+      по адресу (улица + дом) и названию (с транслитерацией латиницы, по ИП — по фамилии и имени врача). Лицензия найдена с совпадением адреса и названия — +45;
+      по адресу, но на другое имя (обычно юрлицо или ИП владельца) — +25; много лицензиатов в одном здании — +10; нет в реестре — −10.
+      Если клиника предлагает наркоз/седацию, а в тексте лицензии нет анестезии, — −10; если МЗ включил в список работающих без лицензии стоматолога по тому же адресу, — −20.
+      Квалификация врачей оценивается по типу документа и уровню доказанности:</p>
     <div class="table-wrap"><table><thead><tr><th>Уровень</th><th>Что это значит</th></tr></thead><tbody>
       ${Object.entries(m.evidence_levels).map(([k, v]) => `<tr><td>${k}</td><td>${esc(v)}</td></tr>`).join("")}</tbody></table></div>
     <div class="table-wrap"><table><thead><tr><th>Тип документа</th><th>Доказывает</th><th>Не доказывает</th><th>Вес</th></tr></thead><tbody>
@@ -313,10 +347,10 @@ async function loadMethod() {
     <p>Сайт, названные врачи, юрлицо, присутствие на медицинских площадках, телефоны, часы, описание услуг. Отражает то, что удалось найти к дате сбора.</p>
     <h3>Ограничения — честно</h3>
     <ul>
-      <li>Рейтинги взяты из поисковой выдачи, а не напрямую из 2ГИС: прямой доступ был закрыт сетевыми ограничениями. Запустите <code>python -m tools.refresh_2gis --key ВАШ_КЛЮЧ</code>, чтобы обновить их через официальный API 2ГИС.</li>
-      <li>Ни одна лицензия ещё не сверена с реестром МЗ КР. Это надо сделать вручную по ИНН.</li>
+      <li>2ГИС не отдаёт тексты отзывов через API, поэтому без загрузки отзывов накрутка видна только по цифрам (5.0 при сотнях оценок, скачки числа оценок между обновлениями).</li>
+      <li>Реестр МЗ КР содержит лицензии, выданные с 2014 года, а адреса в нём записаны вручную и с опечатками. «Нет в реестре» — повод спросить номер, а не доказательство нарушения.</li>
+      <li>По одному адресу (медцентр, бизнес-центр) бывает много кабинетов — тогда нельзя сказать, чья лицензия принадлежит клинике.</li>
       <li>Пороги детекторов накрутки откалиброваны на синтетических данных и исследованиях; на реальных данных их стоит уточнять.</li>
-      <li>Ни один признак не доказывает накрутку в одиночку — мы показываем, на чём основан вывод, чтобы вы могли проверить сами.</li>
     </ul>
     <h3>Где проверять</h3>
     <ul>${Object.values(m.verify_links).flat().map((l) => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title)} ↗</a></li>`).join("")}</ul>`;
@@ -347,8 +381,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
   loadMeta().catch((e) => { $("#notice-text").textContent = e.message; });
   loadList();
-  $("#q").addEventListener("input", debounce(loadList, 250));
-  ["#topic", "#sort", "#only247"].forEach((s) => $(s).addEventListener("change", loadList));
+  $("#q").addEventListener("input", debounce(() => loadList(), 250));
+  ["#topic", "#sort", "#only247", "#license", "#minvol", "#withmulti"].forEach((s) => $(s).addEventListener("change", () => loadList()));
+  $("#more").addEventListener("click", () => loadList(true));
   document.addEventListener("click", (e) => {
     const open = e.target.closest("[data-open]");
     if (open) openClinic(open.dataset.open);

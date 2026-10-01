@@ -51,13 +51,23 @@
           <option value="volume">По числу оценок</option>
           <option value="authenticity">По подлинности отзывов</option>
         </select>
+        <select id="license">
+          <option value="">Любая лицензия</option>
+          <option value="found">Лицензия найдена в реестре</option>
+          <option value="problems">Нет в реестре / другой адрес</option>
+          <option value="unlicensed">По адресу МЗ выявил работу без лицензии</option>
+        </select>
+        <select id="minvol">
+          <option value="">Любое число оценок</option>
+          <option value="30">От 30 оценок</option>
+          <option value="100">От 100 оценок</option>
+        </select>
         <label class="check"><input type="checkbox" id="only247"> Только 24/7</label>
+        <label class="check"><input type="checkbox" id="withmulti"> Показывать медцентры</label>
       </div>
-      <p class="hint">Индекс доверия = 50% рейтинг с поправкой на число оценок + 25% подлинность отзывов + 15% подтверждённая квалификация + 10% прозрачность. Нажмите «Доказательства», чтобы увидеть источник каждой цифры.</p>
+      <p class="hint">Индекс доверия = 45% рейтинг с поправкой на число оценок + 25% подлинность отзывов + 25% лицензия и квалификация + 5% прозрачность. Нажмите «Доказательства», чтобы увидеть источник каждой цифры и найденную лицензию.</p>
       <div id="list" class="list"></div>
-      <h3 class="section-title" id="unranked-title" hidden>Недостаточно данных для рейтинга</h3>
-      <p class="hint" id="unranked-hint" hidden>Клиники реальны, но рейтинг найти не удалось. Это не значит, что они плохие — их просто нечем сравнить.</p>
-      <div id="unranked" class="list compact"></div>
+      <div class="more-row"><span id="list-count" class="muted small"></span><button class="btn ghost" id="more" hidden>Показать ещё</button></div>
     </section>
 
     <!-- ============ ПОДБОР ============ -->

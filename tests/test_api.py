@@ -10,26 +10,36 @@ def test_home_page():
     assert r.status_code == 200 and "DentBishkek" in r.text
 
 
-def test_meta_is_honest_about_licenses():
+def test_meta_reports_registry_and_coverage():
     m = client.get("/api/meta").json()
-    assert m["licenses_verified"] == 0
-    assert "не проверено" in m["license_note"]
+    assert m["clinics_total"] >= 400 and m["clinics_curated"] == 26
+    assert m["registry"]["as_of"] == "12.11.2025"
+    assert m["licenses_found"] > 100 and sum(m["license_statuses"].values()) == m["clinics_total"]
 
 
 def test_clinics_sorted_by_trust_and_filters():
-    rows = client.get("/api/clinics").json()
-    ranked = [r["trust_index"] for r in rows if r["trust_index"] is not None]
-    assert ranked == sorted(ranked, reverse=True)
-    only = client.get("/api/clinics", params={"only_24_7": True}).json()
+    res = client.get("/api/clinics", params={"limit": 600}).json()
+    ranked = [r["trust_index"] for r in res["items"] if r["trust_index"] is not None]
+    assert ranked == sorted(ranked, reverse=True) and res["total"] == len(res["items"])
+    assert not any(r["multi_profile"] for r in res["items"])
+    page = client.get("/api/clinics", params={"limit": 10, "offset": 10}).json()
+    assert len(page["items"]) == 10 and page["items"][0]["id"] == res["items"][10]["id"]
+    only = client.get("/api/clinics", params={"only_24_7": True}).json()["items"]
     assert only and all(r["is_24_7"] for r in only)
-    q = client.get("/api/clinics", params={"q": "Коенкозова"}).json()
-    assert {r["id"] for r in q} == {"dental-house", "solnyshko"}
+    q = client.get("/api/clinics", params={"q": "Коенкозова, 75"}).json()["items"]
+    assert [r["id"] for r in q] == ["dental-house"]
+    found = client.get("/api/clinics", params={"license": "found", "limit": 600}).json()["items"]
+    assert found and all(r["license"]["status"] in ("verified", "probable", "address_match") for r in found)
+    unlic = client.get("/api/clinics", params={"license": "unlicensed", "dental_only": False}).json()["items"]
+    assert unlic and all(r["license"]["unlicensed_at_address"] for r in unlic)
 
 
 def test_clinic_detail_has_evidence():
     d = client.get("/api/clinics/estet").json()
     assert d["clinic"]["inn"] == "01302200910105"
-    assert d["clinic"]["ratings"][0]["source"]["url"].startswith("https://2gis.kg/")
+    assert any(o["source"]["via"] == "platform_api" for o in d["clinic"]["ratings"])
+    assert d["clinic"]["license"]["status"] == "verified"
+    assert d["clinic"]["license"]["matches"][0]["number"] == "НГМУ 4259"
     assert client.get("/api/clinics/nope").status_code == 404
 
 

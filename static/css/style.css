@@ -112,6 +112,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .btn.ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
 .btn.sm { padding: 6px 10px; font-size: 13.5px; }
 .btn:hover { filter: brightness(1.05); }
+.btn[hidden] { display: none; }
 .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
 .row > .field { flex: 1; }
 .wrap-row { flex-wrap: wrap; }
@@ -211,6 +212,9 @@ tr.row-bad td { background: var(--low-bg); }
 .prose { max-width: 860px; }
 .prose li { margin-bottom: 4px; }
 table.audit td:first-child { min-width: 180px; }
+.more-row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; }
+.lic { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+.lic details { margin-top: 4px; }
 .footer { color: var(--muted); font-size: 13px; padding-bottom: 32px; }
 
 @media (max-width: 860px) {

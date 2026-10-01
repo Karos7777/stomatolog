@@ -9,6 +9,7 @@
 """
 import argparse
 import json
+import os
 import sys
 import urllib.parse
 import urllib.request
@@ -85,10 +86,13 @@ def refresh(repo: ClinicRepository, key: str, only=None, dry_run: bool = False,
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--key", required=True, help="ключ 2GIS API")
+    ap.add_argument("--key", default=os.environ.get("DGIS_API_KEY"), help="ключ 2GIS API (или DGIS_API_KEY)")
     ap.add_argument("--only", help="id клиник через запятую")
     ap.add_argument("--dry-run", action="store_true", help="не сохранять изменения")
     args = ap.parse_args(argv)
+    if not args.key:
+        print("Нужен ключ: --key или переменная окружения DGIS_API_KEY")
+        return 1
     only = set(args.only.split(",")) if args.only else None
     report = refresh(ClinicRepository(), args.key, only, args.dry_run)
     for cid, msg in report.items():

@@ -1,7 +1,7 @@
 """Индекс доверия клиники.
 
-    Индекс = 50% рейтинг (с поправкой на объём) + 25% подлинность отзывов
-           + 15% подтверждённая квалификация + 10% прозрачность
+    Индекс = 45% рейтинг (с поправкой на объём) + 25% подлинность отзывов
+           + 25% лицензия и квалификация + 5% прозрачность
 
 Каждая составляющая объясняется списком причин. Неизвестное не приравнивается к плохому:
 клиника без данных о рейтинге не ранжируется, а попадает в группу «недостаточно данных».
@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Tuple
 from app.models import Clinic, CredentialCheckRequest, RatingObservation, ReviewAnalysis
 from app.verification.credentials import check_credential
 
-WEIGHTS = {"rating": 0.50, "authenticity": 0.25, "credentials": 0.15, "transparency": 0.10}
+WEIGHTS = {"rating": 0.45, "authenticity": 0.25, "credentials": 0.25, "transparency": 0.05}
 PRIOR_STRENGTH = 25      # «виртуальные» оценки на уровне среднего по городу
 RATING_SD = 0.9          # типичный разброс оценок одного пациента
 Z_80 = 1.2816            # односторонняя нижняя граница 80%
@@ -118,7 +118,8 @@ def _aggregate_signals(clinic: Clinic, estimates: Dict[str, Dict], with_texts: b
         if not with_texts and e["rating"] >= 4.95 and e["volume"] >= 100:
             penalty += 10
             reasons.append(f"{platform}: рейтинг {e['rating']:g} при {e['volume']} оценках — почти не бывает "
-                           "недовольных. Для медицины это нетипично: проверьте даты и тексты отзывов.")
+                           "недовольных. Для медицины это нетипично (хотя в Бишкеке так у каждой четвёртой крупной "
+                           "клиники): проверьте даты и тексты отзывов, особенно 1–3★.")
             flags.append({"level": "yellow", "text": "Почти 100% пятёрок при большом объёме"})
         if e["unconfirmed"] is not None and e["volume"] and not texts_have_platform_flags:
             share = e["unconfirmed"] / (e["volume"] + e["unconfirmed"])
@@ -177,27 +178,64 @@ def authenticity_component(clinic: Clinic, estimates: Dict[str, Dict],
             "reasons": reasons, "flags": flags}
 
 
-def credentials_component(clinic: Clinic) -> Dict:
-    score = 0.0
-    reasons: List[str] = []
+LICENSE_POINTS = {"verified": 45, "probable": 30, "address_match": 25, "ambiguous": 10,
+                  "name_other_address": 5, "not_found": -10, "not_checked": 0}
+
+
+def license_assessment(clinic: Clinic) -> Tuple[float, List[str], List[Dict]]:
+    lic = clinic.license
+    score = float(LICENSE_POINTS[lic.status])
+    reasons = [lic.label + (f" (реестр МЗ КР на {lic.registry.get('as_of')})." if lic.registry.get("as_of") else ".")]
     flags: List[Dict] = []
-    checks = []
-    if clinic.license.status == "verified":
-        score += 45
-        reasons.append("Лицензия МЗ КР найдена в реестре.")
-        flags.append({"level": "green", "text": "Лицензия подтверждена"})
-    elif clinic.license.status == "not_found":
-        reasons.append("Лицензия в реестре МЗ КР НЕ найдена.")
-        flags.append({"level": "red", "text": "Лицензия не найдена в реестре"})
-        return {"score": 0.0, "reasons": reasons, "flags": flags, "checks": checks}
+    for m in lic.matches[:2]:
+        chairs = f", кресел: {m.chairs}" if m.chairs else ""
+        reasons.append(f"Лицензия {m.number} — {m.holder}, {m.address}, выдана {m.issued}{chairs}. "
+                       f"Виды помощи: {', '.join(m.scope) or 'не распознаны'}.")
+    if lic.status == "verified":
+        flags.append({"level": "green", "text": "Лицензия МЗ найдена"})
+    elif lic.status in ("probable", "address_match"):
+        flags.append({"level": "green" if lic.status == "probable" else "yellow",
+                      "text": "Лицензия вероятно найдена" if lic.status == "probable" else "Лицензия по адресу — на другое имя"})
+    elif lic.status == "ambiguous":
+        flags.append({"level": "yellow", "text": f"По адресу {lic.other_licensees_at_address + 1} лицензиатов — уточните"})
+    elif lic.status == "name_other_address":
+        flags.append({"level": "yellow", "text": "Лицензия выдана на другой адрес"})
+    elif lic.status == "not_found":
+        flags.append({"level": "red", "text": "Нет в реестре лицензий МЗ"})
+        reasons.append("Это не доказывает работу без лицензии (реестр мог не учесть старые лицензии или другое юрлицо), "
+                       "но перед лечением обязательно спросите номер лицензии и проверьте его.")
     else:
-        reasons.append("Лицензия МЗ КР не сверена с реестром.")
         flags.append({"level": "yellow", "text": "Лицензия не проверена"})
+    if lic.unlicensed_at_address:
+        score -= 20
+        names = ", ".join(u["name"] for u in lic.unlicensed_at_address[:3])
+        reasons.append(f"Минздрав включил в список работающих БЕЗ лицензии стоматологов по этому адресу: {names}. "
+                       "По одному адресу бывает несколько кабинетов — спросите, кто будет вас лечить и по какой лицензии.")
+        flags.append({"level": "red", "text": "По адресу МЗ выявил работу без лицензии"})
+    certain = lic.status == "verified" or (lic.status == "address_match" and lic.matches
+                                          and lic.matches[0].match.get("address") == "exact")
+    if certain and lic.scope_gaps:
+        for gap in lic.scope_gaps:
+            if gap == "анестезия/наркоз":
+                score -= 10
+                flags.append({"level": "red", "text": "В лицензии нет анестезии, а клиника предлагает сон/седацию"})
+            elif gap in ("хирургия", "ортопедия (коронки, протезы)"):
+                score -= 5
+                flags.append({"level": "yellow", "text": f"В лицензии нет: {gap}"})
+    if lic.scope_gaps and lic.status in ("verified", "probable", "address_match"):
+        reasons.append("Клиника указывает услуги, которых нет в тексте найденной лицензии: " + ", ".join(lic.scope_gaps)
+                       + ". Возможно, есть приложение к лицензии — спросите его."
+                       + ("" if certain else " Сопоставление с лицензией неточное, поэтому в индекс не засчитано."))
+    return score, reasons, flags
+
+
+def credentials_component(clinic: Clinic) -> Dict:
+    score, reasons, flags = license_assessment(clinic)
+    checks = []
     if clinic.inn and clinic.inn_source:
         reasons.append(f"Юрлицо найдено в открытом реестре: ИНН {clinic.inn} — по нему можно проверить лицензию.")
         flags.append({"level": "green", "text": "Юрлицо найдено (ИНН)"})
     if clinic.doctors:
-        score += 10
         reasons.append("Врачи названы публично: " + ", ".join(d.name for d in clinic.doctors) + ".")
     claim_weight = 0.0
     for doc in clinic.doctors:
@@ -247,7 +285,7 @@ def transparency_component(clinic: Clinic) -> Dict:
 
 def data_confidence(clinic: Clinic, analysis: Optional[ReviewAnalysis]) -> str:
     best = max((VIA_RANK[o.source.via] for o in clinic.ratings), default=0)
-    if clinic.license.status == "verified" and (best >= 4 or analysis is not None):
+    if clinic.license.status in ("verified", "probable") and best >= 4 and analysis is not None:
         return "высокая"
     if best >= 3 or analysis is not None:
         return "средняя"
@@ -273,6 +311,8 @@ def evaluate(clinic: Clinic, prior: float, analysis: Optional[ReviewAnalysis] = 
             flags.append({"level": "yellow", "text": f"Мало оценок ({volume})"})
     if clinic.ratings and all(o.source.via == "web_search_snippet" for o in clinic.ratings):
         flags.append({"level": "yellow", "text": "Рейтинг из поисковой выдачи — сверьте с 2ГИС"})
+    if clinic.multi_profile:
+        flags.append({"level": "yellow", "text": "Многопрофильный медцентр — рейтинг не только за стоматологию"})
 
     trust = None
     if comp["rating"]["score"] is not None:

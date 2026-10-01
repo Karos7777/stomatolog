@@ -43,25 +43,33 @@ def _flags(flags):
     return "  ".join(f"[{FLAG_STYLE.get(f['level'], 'white')}]{f['text']}[/]" for f in flags[:3])
 
 
-def cmd_ranking(_args) -> None:
+LIC_SHORT = {"verified": "[green]найдена[/]", "probable": "[green]вероятно[/]", "address_match": "[yellow]по адресу[/]",
+             "ambiguous": "[yellow]много в здании[/]", "name_other_address": "[yellow]другой адрес[/]",
+             "not_found": "[red]нет в реестре[/]", "not_checked": "—"}
+
+
+def cmd_ranking(args) -> None:
     console.print(Panel.fit(
         "[bold]Рейтинг доверия стоматологий Бишкека[/bold]\n"
         f"[dim]{repo.meta.get('license_note', '')}[/dim]", border_style="cyan"))
     table = Table(show_header=True, header_style="bold")
-    for col, kw in (("#", {"width": 3}), ("Клиника", {}), ("Индекс", {"justify": "center"}),
-                    ("Рейтинг", {"justify": "center"}), ("Оценок", {"justify": "right"}), ("Флаги", {})):
+    for col, kw in (("#", {"width": 4}), ("Клиника", {}), ("Индекс", {"justify": "center"}),
+                    ("Рейтинг", {"justify": "center"}), ("Оценок", {"justify": "right"}),
+                    ("Лицензия МЗ", {}), ("Флаги", {})):
         table.add_column(col, **kw)
-    rows = rank(repo.all(), repo.analyses())
-    for r in rows:
+    rows = [r for r in rank(repo.all(), repo.analyses()) if args.with_multi or not r["clinic"].multi_profile]
+    for r in rows[:getattr(args, "top", 30)]:
         s, c = r["score"], r["clinic"]
         ti = s["trust_index"]
+        flags = [f for f in s["flags"] if f["level"] != "green"]
         table.add_row(str(r["position"] or "—"), f"{c.name}\n[dim]{c.address}[/dim]",
                       f"[{_score_style(ti)}]{ti if ti is not None else 'нет данных'}[/]",
-                      f"{s['rating']:g}★" if s["rating"] is not None else "—", str(s["volume"] or "—"), _flags(s["flags"]))
+                      f"{s['rating']:g}★" if s["rating"] is not None else "—", str(s["volume"] or "—"),
+                      LIC_SHORT[c.license.status], _flags(flags))
     console.print(table)
-    console.print("[dim]Индекс = " + " + ".join(f"{int(w * 100)}% {k}" for k, w in WEIGHTS.items())
+    console.print(f"[dim]Показано {min(len(rows), getattr(args, 'top', 30))} из {len(rows)}. "
+                  "Индекс = " + " + ".join(f"{int(w * 100)}% {k}" for k, w in WEIGHTS.items())
                   + ". Подробно: python cli.py show <id>[/dim]")
-    console.print("[dim]id: " + ", ".join(c.id for c in repo.all()) + "[/dim]")
 
 
 def cmd_show(args) -> None:
@@ -90,6 +98,14 @@ def cmd_show(args) -> None:
         v = check["verdict"]
         console.print(f"\n[bold]{check['doctor']}[/bold] — «{check['claim']}»: [yellow]{v['verdict']}[/yellow]")
         console.print(f"  Доказывает: {v['proves']}\n  Не доказывает: {v['does_not_prove']}")
+    lic = c.license
+    console.print(f"\n[bold]Лицензия МЗ КР:[/bold] {lic.label}")
+    for m in lic.matches:
+        console.print(f"  {m.number} — {m.holder}, {m.address}, выдана {m.issued}; виды помощи: {', '.join(m.scope) or '—'}")
+    if lic.scope_gaps:
+        console.print(f"  [yellow]Нет в тексте лицензии: {', '.join(lic.scope_gaps)}[/]")
+    for u in lic.unlicensed_at_address:
+        console.print(f"  [bold red]МЗ: без лицензии по этому адресу — {u['name']} ({u['address']})[/]")
     for n in c.notes:
         console.print(f"[dim]• {n}[/dim]")
 
@@ -147,7 +163,8 @@ def cmd_audit(_args) -> None:
 def main_cli(argv=None) -> None:
     ap = argparse.ArgumentParser(description="DentBishkek: стоматологии Бишкека с доказательствами")
     sub = ap.add_subparsers(dest="cmd")
-    sub.add_parser("ranking")
+    p = sub.add_parser("ranking")
+    p.add_argument("--top", type=int, default=30); p.add_argument("--with-multi", action="store_true")
     p = sub.add_parser("show"); p.add_argument("clinic_id")
     p = sub.add_parser("match"); p.add_argument("problem"); p.add_argument("--now", action="store_true", help="нужно 24/7")
     p = sub.add_parser("reviews"); p.add_argument("file")
@@ -157,6 +174,8 @@ def main_cli(argv=None) -> None:
     p.add_argument("--specialty"); p.add_argument("--level", type=int, default=1, choices=[0, 1, 2, 3, 4])
     sub.add_parser("audit")
     args = ap.parse_args(argv)
+    if args.cmd is None:
+        args.top, args.with_multi = 30, False
     {"show": cmd_show, "match": cmd_match, "reviews": cmd_reviews, "cert": cmd_cert,
      "audit": cmd_audit}.get(args.cmd, cmd_ranking)(args)
 

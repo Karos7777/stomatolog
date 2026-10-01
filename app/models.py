@@ -3,7 +3,7 @@
 Главный принцип: любой факт о клинике хранится вместе с источником (URL), датой и способом
 получения. Факт без источника не показывается как подтверждённый.
 """
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -77,17 +77,53 @@ class Doctor(BaseModel):
     sources: List[Source] = []
 
 
-class LicenseInfo(BaseModel):
-    status: Literal["verified", "not_found", "not_checked"] = "not_checked"
-    number: Optional[str] = None
+LicenseStatus = Literal["verified", "probable", "address_match", "ambiguous", "name_other_address",
+                        "not_found", "not_checked"]
+
+LICENSE_LABELS = {
+    "verified": "Лицензия найдена в реестре МЗ КР: совпали адрес и название",
+    "probable": "Вероятно найдена: адрес и название совпали частично",
+    "address_match": "По этому адресу есть стоматологическая лицензия, но на другое имя (обычно юрлицо или ИП владельца) — уточните",
+    "ambiguous": "По этому адресу много лицензиатов (медцентр/бизнес-центр) — какой из них клиника, неизвестно",
+    "name_other_address": "Лицензия на похожее название, но выдана на ДРУГОЙ адрес",
+    "not_found": "В реестре МЗ КР не найдена — спросите номер лицензии",
+    "not_checked": "Не проверялась",
+}
+
+
+class LicenseMatch(BaseModel):
+    number: str
+    holder: str
+    address: str
+    issued: Optional[str] = None
+    activity: str = ""
     scope: List[str] = []
+    chairs: Optional[int] = None
+    match: Dict[str, Any] = {}
+
+
+class LicenseInfo(BaseModel):
+    status: LicenseStatus = "not_checked"
+    method: Literal["auto", "manual"] = "auto"
+    matches: List[LicenseMatch] = []
+    scope: List[str] = []
+    scope_gaps: List[str] = []
+    other_licensees_at_address: int = 0
+    unlicensed_at_address: List[Dict[str, str]] = []
+    note: Optional[str] = None
+    registry: Dict[str, Optional[str]] = {}
     source: Optional[Source] = None
+
+    @property
+    def label(self) -> str:
+        return LICENSE_LABELS[self.status]
 
 
 class Clinic(BaseModel):
     id: str
     name: str
     legal_name: Optional[str] = None
+    aliases: List[str] = []              # написание кириллицей/латиницей для сверки с реестром
     inn: Optional[str] = None
     inn_source: Optional[Source] = None
     address: str
@@ -108,6 +144,8 @@ class Clinic(BaseModel):
     notes: List[str] = []
     sources: List[Source] = []
     coordinates: Optional[Dict[str, float]] = None
+    multi_profile: bool = False          # многопрофильный медцентр: рейтинг не только за стоматологию
+    curated: bool = True                 # False — карточка собрана автоматически из 2GIS API
 
     @property
     def gis_url(self) -> Optional[str]:

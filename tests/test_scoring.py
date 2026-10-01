@@ -62,9 +62,20 @@ def test_license_not_found_zeroes_credentials():
     assert any(f["level"] == "red" for f in s["flags"])
 
 
-def test_verified_license_raises_credentials_and_confidence():
-    src = {"url": "https://license.med.kg/ru/", "observed": "2026-10-01", "via": "official_registry"}
+def test_verified_license_raises_credentials():
+    src = {"url": "https://med.kg/uploads/x.xlsx", "observed": "2026-10-01", "via": "official_registry"}
     c = clinic("c", [obs(4.9, 300, via="platform_api")], license={"status": "verified", "source": src})
     s = evaluate(c, 4.8)
     assert s["components"]["credentials"]["score"] >= 45
-    assert s["confidence"] == "высокая"
+    assert s["confidence"] == "средняя"   # «высокая» — только после анализа текстов отзывов
+
+
+def test_unlicensed_at_address_and_anesthesia_gap_penalised():
+    clean = clinic("a", [obs(4.9, 300)], license={"status": "verified"})
+    bad = clinic("b", [obs(4.9, 300)], license={
+        "status": "verified", "scope_gaps": ["анестезия/наркоз"],
+        "unlicensed_at_address": [{"name": "Иванов", "address": "ул. Тестовая, 1"}]})
+    s_clean, s_bad = evaluate(clean, 4.8), evaluate(bad, 4.8)
+    assert s_bad["components"]["credentials"]["score"] <= s_clean["components"]["credentials"]["score"] - 30
+    texts = " ".join(f["text"] for f in s_bad["flags"])
+    assert "без лицензии" in texts and "анестезии" in texts
