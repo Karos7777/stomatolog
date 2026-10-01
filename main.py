@@ -19,10 +19,10 @@ def open_browser():
 def main():
     if len(sys.argv) > 1 and sys.argv[1] in ["--cli", "-c", "cli"]:
         from cli import main_cli
-        main_cli()
+        main_cli(sys.argv[2:])
     else:
         print("="*60)
-        print("🦷 СТОМАТОЛОГ БИШКЕК: Запуск системы поиска лучшего стоматолога")
+        print("🦷 DentBishkek: стоматологии Бишкека с доказательствами")
         print("="*60)
         print("📍 Город: Бишкек, Кыргызстан")
         print("🌐 Веб-сервер запускается на: http://127.0.0.1:8000")

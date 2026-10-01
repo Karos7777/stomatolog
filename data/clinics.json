@@ -1,0 +1,1486 @@
+{
+  "meta": {
+    "city": "Бишкек",
+    "collected_at": "2026-10-01",
+    "method": "Данные собраны из открытой поисковой выдачи (карточки 2ГИС, YDoc, medelement, medik.kg, сайты клиник, kaktus.media). Прямой доступ к 2ГИС и госреестрам из среды сбора был закрыт, поэтому рейтинги — это значения из поисковых сводок на дату сбора: они могут отставать от живой карточки. Обновите их через tools/refresh_2gis.py (ваш ключ API 2ГИС) или вручную.",
+    "license_note": "Лицензии МЗ КР не сверены ни для одной клиники: реестр (license.med.kg) и Түндүк были недоступны. До проверки статус — «не проверено», а не «есть»."
+  },
+  "clinics": [
+    {
+      "id": "metadent",
+      "name": "Metadent",
+      "address": "ул. Арстанбека Дуйшеева, 8, 2 этаж (ЖК English Quarter)",
+      "gis_firm_id": "70000001081256810",
+      "website": "https://metadent.kg",
+      "links": {
+        "ydoc": "https://ydoc.kg/bishkek/lpu/8320-stomatologiya-metadent-metadent/",
+        "medelement": "https://company.medelement.com/landing/20696031712151091"
+      },
+      "phones": [
+        "+996 550 07 88 87",
+        "+996 770 07 88 87",
+        "+996 312 97 58 87"
+      ],
+      "services": [
+        "терапия",
+        "хирургия",
+        "ортопедия",
+        "имплантация",
+        "ортодонтия",
+        "эстетика",
+        "лечение под микроскопом",
+        "КЛКТ (3D-снимок)"
+      ],
+      "services_source": {
+        "url": "https://metadent.kg/",
+        "observed": "2026-10-01",
+        "via": "clinic_claim",
+        "title": "Сайт клиники"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 5.0,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/rubricId/222",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 524
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/rubricId/222",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 551,
+          "note": "В сводке — «номинант 2026»"
+        }
+      ],
+      "awards": [
+        {
+          "title": "Номинант 2ГИС 2026",
+          "confidence": "низкая",
+          "note": "Только по поисковой сводке"
+        }
+      ],
+      "notes": [
+        "Клиника заявляет 14 специалистов (сайт), на YDoc указано 6 врачей.",
+        "Одна поисковая сводка приписывала Metadent адрес ул. Ахунбаева, 42а — не подтверждено: по этому адресу 2ГИС показывает другую «Стоматологическую клинику» (4.7★, 131 оценка)."
+      ],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001081256810",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        },
+        {
+          "url": "https://metadent.kg/about-us/",
+          "observed": "2026-10-01",
+          "via": "clinic_claim",
+          "title": "Сайт: о клинике"
+        },
+        {
+          "url": "https://ydoc.kg/bishkek/lpu/8320-stomatologiya-metadent-metadent/",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "YDoc"
+        }
+      ],
+      "doctors": []
+    },
+    {
+      "id": "emmar",
+      "name": "Emmar",
+      "address": "ул. Айтиева, 17/1",
+      "district": "Асанбай",
+      "gis_firm_id": "70000001025975293",
+      "website": "https://emmar-clinic.com",
+      "links": {
+        "medik": "https://medik.kg/clinic/stomatologicheskii-tsentr-emmar146/"
+      },
+      "phones": [
+        "+996 555 66 99 33"
+      ],
+      "hours": "Пн–Сб 9:00–20:00, Вс 9:00–18:00",
+      "services": [
+        "лечение под микроскопом",
+        "КТ",
+        "ОПТГ",
+        "седация для детей",
+        "цифровая стоматология",
+        "ортодонтия",
+        "хирургия"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001025975293",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/rubricId/222",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 420
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001025975293",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 425,
+          "reviews_count": 225
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001025975293",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        },
+        {
+          "url": "https://www.top-rated.online/cities/Bishkek/place/p/9162213/Emmar+%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9+%D1%86%D0%B5%D0%BD%D1%82%D1%80",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "top-rated.online"
+        }
+      ],
+      "doctors": [],
+      "notes": []
+    },
+    {
+      "id": "life-stom",
+      "name": "Life stom",
+      "address": "ул. Анарбека Бакаева, 130/2",
+      "branches": 2,
+      "is_24_7": true,
+      "links": {
+        "2gis": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D1%80%D1%8F%D0%B4%D0%BE%D0%BC"
+      },
+      "services": [
+        "круглосуточный приём",
+        "ортодонтия",
+        "хирургия"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D1%80%D1%8F%D0%B4%D0%BE%D0%BC",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Описание в 2ГИС: «работает круглосуточно»"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/rubricId/222",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 271,
+          "reviews_count": 218
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.8,
+          "source": {
+            "url": "https://ydoc.kg/bishkek/stomatolog/",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 276,
+          "note": "Другая поисковая сводка"
+        }
+      ],
+      "notes": [
+        "Номер карточки 2ГИС не найден — ссылка ведёт на поиск."
+      ],
+      "phones": [],
+      "doctors": [],
+      "sources": []
+    },
+    {
+      "id": "olio",
+      "name": "Olio",
+      "address": "ул. Ибраимова, 103/1а",
+      "links": {
+        "2gis": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5"
+      },
+      "services": [
+        "лечение детей и взрослых",
+        "ортодонтия (дети и взрослые)",
+        "хирургия",
+        "КТ"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Описание в 2ГИС: «стоматология экспертного уровня»"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 5.0,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 61
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/rubricId/222",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 73
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D0%B8%D0%BC%D0%BF%D0%BB%D0%B0%D0%BD%D1%82",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 78
+        }
+      ],
+      "notes": [
+        "Номер карточки 2ГИС не найден — ссылка ведёт на поиск."
+      ],
+      "phones": [],
+      "doctors": [],
+      "sources": []
+    },
+    {
+      "id": "luxar",
+      "name": "Люксар",
+      "address": "ул. Турусбекова, 13",
+      "links": {
+        "2gis": "https://2gis.kg/bishkek/search/%D0%9B%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B7%D1%83%D0%B1%D0%BE%D0%B2%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5"
+      },
+      "services": [
+        "хирургия",
+        "ортодонтия",
+        "имплантация"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/search/%D0%9B%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B7%D1%83%D0%B1%D0%BE%D0%B2%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/rubricId/222",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 149
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.8,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%9B%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B7%D1%83%D0%B1%D0%BE%D0%B2%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 103
+        }
+      ],
+      "notes": [
+        "Рекламирует рассрочку через MBANK и скидку 20% на импланты (2ГИС). Скидка на хирургию — не показатель качества.",
+        "Номер карточки 2ГИС не найден — ссылка ведёт на поиск."
+      ],
+      "phones": [],
+      "doctors": [],
+      "sources": []
+    },
+    {
+      "id": "ali-dent",
+      "name": "Али-Дент",
+      "address": "ул. Фрунзе, 364/3, 1 этаж",
+      "district": "Первомайский",
+      "branches": 2,
+      "gis_firm_id": "70000001033857801",
+      "links": {
+        "medik": "https://medik.kg/clinic/stomatologicheskaia-klinika-ali-dent162/"
+      },
+      "services": [
+        "ортодонтия",
+        "ортопедия",
+        "хирургия",
+        "имплантация",
+        "пародонтология",
+        "детская стоматология",
+        "КТ",
+        "ОПТГ",
+        "лечение под микроскопом",
+        "цифровая стоматология"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001033857801",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.6,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/rubricId/222",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 358
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.6,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 223
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.6,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001033857801",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "reviews_count": 146
+        }
+      ],
+      "phones": [],
+      "doctors": [],
+      "notes": [],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001033857801",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "kings-clinic",
+      "name": "King's clinic",
+      "address": "ул. Ахматбека Суюмбаева, 10/2; Койташский пер., 48",
+      "branches": 2,
+      "gis_firm_id": "70000001032464971",
+      "phones": [
+        "+996 772 00 03 64"
+      ],
+      "links": {
+        "ydoc": "https://ydoc.kg/bishkek/lpu/8072-stomatologiya-kings-clinic-kings-klinik/",
+        "2gis_branch_2": "https://2gis.kg/bishkek/firm/70000001077345375"
+      },
+      "services": [
+        "детская стоматология",
+        "гигиена"
+      ],
+      "notes": [
+        "Рейтинг 2ГИС получить не удалось — откройте карточку и внесите вручную или запустите обновление через API."
+      ],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001032464971",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        },
+        {
+          "url": "https://ydoc.kg/bishkek/lpu/8072-stomatologiya-kings-clinic-kings-klinik/",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "YDoc: 4 врача"
+        }
+      ],
+      "ratings": [],
+      "doctors": []
+    },
+    {
+      "id": "dental-house",
+      "name": "Dental House",
+      "address": "ул. Коенкозова, 75",
+      "gis_firm_id": "70000001047184544",
+      "website": "https://dentalhouse.kg",
+      "hours": "Пн–Сб 9:00–20:00, Вс 9:00–18:00",
+      "services": [
+        "лечение кариеса",
+        "чистка",
+        "имплантация",
+        "протезирование",
+        "детская стоматология"
+      ],
+      "services_source": {
+        "url": "https://dentalhouse.kg/",
+        "observed": "2026-10-01",
+        "via": "clinic_claim",
+        "title": "Сайт клиники"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.8,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001047184544/tab/reviews",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 221
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/rubricId/222",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 299,
+          "note": "В сводках встречается 4.8–4.9 и 275–299 оценок"
+        }
+      ],
+      "phones": [],
+      "doctors": [],
+      "notes": [],
+      "links": {},
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001047184544",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "estet",
+      "name": "Эстет Dr. Alex Soloshenko",
+      "legal_name": "ОсОО «Клиника-студия Эстет»",
+      "inn": "01302200910105",
+      "inn_source": {
+        "url": "https://www.osoo.kg/inn/01302200910105/",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "osoo.kg: карточка юрлица"
+      },
+      "address": "3-й микрорайон, 14/2",
+      "gis_firm_id": "70000001051468417",
+      "website": "https://estet.kg",
+      "phones": [
+        "+996 312 90 80 00"
+      ],
+      "links": {
+        "ydoc": "https://ydoc.kg/bishkek/lpu/1525-estet/",
+        "medelement": "https://company.medelement.com/%D1%81%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F-%D0%BA%D0%BB%D0%B8%D0%BD%D0%B8%D0%BA%D0%B0-%D1%8D%D1%81%D1%82%D0%B5%D1%82-dr-alex-soloshenko-%D0%B1%D0%B8%D1%88%D0%BA%D0%B5%D0%BA"
+      },
+      "services": [
+        "хирургия",
+        "ортопедия",
+        "имплантация",
+        "пародонтология",
+        "детская стоматология",
+        "ортодонтия",
+        "КТ",
+        "ОПТГ"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001051468417",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001051468417/tab/reviews",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 119
+        }
+      ],
+      "doctors": [
+        {
+          "name": "Солошенко Александр Викторович",
+          "role": "главный врач, хирург-имплантолог",
+          "claims": [
+            {
+              "title": "Хирург-имплантолог (специализация на профиле врача)",
+              "evidence": {
+                "level": 1,
+                "source": {
+                  "url": "https://ydoc.kg/bishkek/vrach/25430-soloshenko/",
+                  "observed": "2026-10-01",
+                  "via": "web_search_snippet",
+                  "title": "YDoc: профиль врача"
+                }
+              },
+              "kind": "declared_specialty"
+            }
+          ],
+          "sources": [
+            {
+              "url": "https://ydoc.kg/bishkek/vrach/25430-soloshenko/",
+              "observed": "2026-10-01",
+              "via": "web_search_snippet"
+            },
+            {
+              "url": "https://medik.kg/doctor/soloshenko/",
+              "observed": "2026-10-01",
+              "via": "web_search_snippet"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Юрлицо найдено в открытом реестре (osoo.kg, ИНН 01302200910105) — по этому ИНН можно проверить лицензию МЗ КР через Түндүк."
+      ],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001051468417",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        },
+        {
+          "url": "https://ydoc.kg/bishkek/lpu/1525-estet/",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "YDoc: 20 врачей"
+        }
+      ]
+    },
+    {
+      "id": "expert-dental",
+      "name": "Expert Dental Studio",
+      "address": "Киевская ул., 88",
+      "gis_firm_id": "70000001089655879",
+      "website": "https://expertdental.kg",
+      "phones": [
+        "+996 555 255 455"
+      ],
+      "services": [
+        "имплантация",
+        "ортопедия",
+        "хирургия"
+      ],
+      "services_source": {
+        "url": "https://www.expertdental.kg/expertdentalkg",
+        "observed": "2026-10-01",
+        "via": "clinic_claim",
+        "title": "Сайт клиники"
+      },
+      "doctors": [
+        {
+          "name": "Талышханов Мир-Али",
+          "role": "хирург-имплантолог, ортопед",
+          "claims": [
+            {
+              "title": "Хирург-имплантолог, ортопед (заявлено на сайте клиники)",
+              "evidence": {
+                "level": 1,
+                "source": {
+                  "url": "https://www.expertdental.kg/expertdentalkg",
+                  "observed": "2026-10-01",
+                  "via": "clinic_claim"
+                }
+              },
+              "kind": "declared_specialty"
+            },
+            {
+              "title": "Авторские курсы: ученик Б. Бернацкого, Т. Юрова, П. Ярошевича",
+              "evidence": {
+                "level": 1,
+                "source": {
+                  "url": "https://www.expertdental.kg/expertdentalkg",
+                  "observed": "2026-10-01",
+                  "via": "clinic_claim"
+                }
+              },
+              "issuer": "Частные курсы"
+            }
+          ],
+          "sources": [
+            {
+              "url": "https://www.expertdental.kg/expertdentalkg",
+              "observed": "2026-10-01",
+              "via": "clinic_claim"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Не путать с «Expert Dental Clinic» на ул. Суюмбаева, 41 (другая карточка 2ГИС).",
+        "Рейтинг 2ГИС получить не удалось."
+      ],
+      "ratings": [],
+      "links": {},
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001089655879",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "level-dent",
+      "name": "Level Dent",
+      "address": "ул. Исанова, 42/1 (и второй филиал)",
+      "branches": 2,
+      "phones": [
+        "+996 509 555 785",
+        "+996 778 778 070"
+      ],
+      "links": {
+        "kaktus": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html"
+      },
+      "services": [
+        "лечение",
+        "протезирование",
+        "исправление прикуса",
+        "имплантация",
+        "синус-лифтинг",
+        "удаление любой сложности"
+      ],
+      "services_source": {
+        "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+        "observed": "2026-10-01",
+        "via": "media",
+        "title": "Kaktus.media"
+      },
+      "doctors": [
+        {
+          "name": "Бектемиров Дуйшон",
+          "role": "челюстно-лицевой хирург-имплантолог, основатель сети",
+          "claims": [
+            {
+              "title": "Челюстно-лицевой хирург-имплантолог (по данным СМИ)",
+              "evidence": {
+                "level": 1,
+                "source": {
+                  "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+                  "observed": "2026-10-01",
+                  "via": "media"
+                }
+              },
+              "kind": "declared_specialty"
+            }
+          ],
+          "sources": [
+            {
+              "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+              "observed": "2026-10-01",
+              "via": "media"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Консультация 500 сом (kaktus.media).",
+        "Карточка и рейтинг 2ГИС не найдены поиском."
+      ],
+      "sources": [
+        {
+          "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+          "observed": "2026-10-01",
+          "via": "media",
+          "title": "Kaktus.media: 5 стоматологов Бишкека"
+        }
+      ],
+      "ratings": []
+    },
+    {
+      "id": "alpha-dental",
+      "name": "Alpha Dental",
+      "address": "пер. Керимбекова, 13, цокольный этаж",
+      "district": "Первомайский",
+      "gis_firm_id": "70000001047810341",
+      "links": {
+        "medelement": "https://company.medelement.com/landing/237879901711629305"
+      },
+      "services": [
+        "ортодонтия",
+        "ортопедия",
+        "хирургия",
+        "имплантация",
+        "гнатология",
+        "детская стоматология"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001047810341",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.1,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001047810341",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "reviews_count": 17
+        }
+      ],
+      "doctors": [
+        {
+          "name": "Абдылдаев Нурмухамет",
+          "role": "ортодонт; основатель Alpha dental и лаборатории элайнеров Clear Aligners",
+          "claims": [
+            {
+              "title": "Ортодонт (по данным СМИ)",
+              "evidence": {
+                "level": 1,
+                "source": {
+                  "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+                  "observed": "2026-10-01",
+                  "via": "media"
+                }
+              },
+              "kind": "declared_specialty"
+            }
+          ],
+          "sources": [
+            {
+              "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+              "observed": "2026-10-01",
+              "via": "media"
+            }
+          ]
+        }
+      ],
+      "phones": [],
+      "notes": [],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001047810341",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "simpladent",
+      "name": "Simpladent",
+      "address": "пр. Манаса, 8",
+      "gis_firm_id": "70000001019350350",
+      "phones": [
+        "+996 555 31 56 02",
+        "+996 312 31 56 02"
+      ],
+      "hours": "Пн–Пт 8:30–19:30, Сб 9:00–17:00",
+      "links": {
+        "ydoc": "https://ydoc.kg/bishkek/lpu/6933-stomatologiya-simpladent-simpladent/"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.6,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001019350350/tab/reviews",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 54,
+          "reviews_count": 28
+        }
+      ],
+      "notes": [
+        "YDoc: 4 врача, 1 отзыв."
+      ],
+      "services": [],
+      "doctors": [],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001019350350",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "solnyshko",
+      "name": "Солнышко",
+      "address": "ул. Коенкозова, 1а",
+      "gis_firm_id": "70000001026470303",
+      "services": [
+        "детская стоматология"
+      ],
+      "services_source": {
+        "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+        "observed": "2026-10-01",
+        "via": "media"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.7,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001026470303/tab/reviews",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 65
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.8,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001026470303/tab/reviews",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 63,
+          "reviews_count": 26
+        }
+      ],
+      "doctors": [
+        {
+          "name": "Каримова Сайкал",
+          "role": "стоматолог",
+          "claims": [
+            {
+              "title": "Стоматолог (по данным СМИ)",
+              "evidence": {
+                "level": 1,
+                "source": {
+                  "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+                  "observed": "2026-10-01",
+                  "via": "media"
+                }
+              },
+              "kind": "declared_specialty"
+            }
+          ],
+          "sources": [
+            {
+              "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+              "observed": "2026-10-01",
+              "via": "media"
+            }
+          ]
+        }
+      ],
+      "phones": [
+        "+996 703 835 353"
+      ],
+      "hours": "Пн–Сб 9:00–19:00",
+      "notes": [
+        "Консультация 500 сом (kaktus.media)."
+      ],
+      "links": {},
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001026470303",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "adis",
+      "name": "Adis",
+      "address": "городок Энергетиков, 10",
+      "gis_firm_id": "70000001021496008",
+      "website": "https://adisdent.kg",
+      "phones": [
+        "+996 312 33 03 03",
+        "+996 554 43 03 03"
+      ],
+      "hours": "Пн–Сб 8:30–18:00",
+      "services": [
+        "КТ",
+        "ортодонтия",
+        "хирургия",
+        "имплантация",
+        "детская стоматология"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001021496008",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 3.8,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001021496008",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "reviews_count": 25
+        }
+      ],
+      "doctors": [],
+      "notes": [],
+      "links": {},
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001021496008",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "kairos",
+      "name": "Kairos",
+      "address": "ул. Рыскулова, 10, 1 этаж",
+      "district": "Первомайский",
+      "gis_firm_id": "70000001019357712",
+      "phones": [
+        "+996 312 61 23 03",
+        "+996 312 61 23 02",
+        "+996 556 140 140"
+      ],
+      "links": {
+        "ydoc": "https://ydoc.kg/bishkek/lpu/7780-stomatologiya-kairos-kayros/"
+      },
+      "services": [
+        "терапия",
+        "хирургия",
+        "ортодонтия",
+        "пародонтология",
+        "ортопедия",
+        "профилактика",
+        "детская стоматология"
+      ],
+      "services_source": {
+        "url": "https://ydoc.kg/bishkek/lpu/7780-stomatologiya-kairos-kayros/",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "YDoc"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.7,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001019357712",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 51
+        }
+      ],
+      "notes": [
+        "Работает с 2008 года (YDoc). YDoc: 8 врачей."
+      ],
+      "doctors": [],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001019357712",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "profi-dent",
+      "name": "Profi-Dent",
+      "address": "ул. Сухэ-Батора, 5/1 (6 мкр); Profi-Dent plus — ул. Сыдыкова (ТЦ «Караван»)",
+      "branches": 2,
+      "gis_firm_id": "70000001019327689",
+      "website": "https://profident.kg",
+      "links": {
+        "2gis_branch_2": "https://2gis.kg/bishkek/firm/70000001019359405"
+      },
+      "phones": [
+        "+996 700 949 202",
+        "+996 556 949 202",
+        "+996 555 949 202"
+      ],
+      "services": [
+        "челюстно-лицевая хирургия",
+        "ортогнатическая хирургия",
+        "имплантация"
+      ],
+      "services_source": {
+        "url": "https://profident.kg/",
+        "observed": "2026-10-01",
+        "via": "clinic_claim",
+        "title": "Сайт клиники"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.7,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001019327689",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 136,
+          "note": "К какому филиалу относится — не установлено"
+        },
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001019359405",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 171,
+          "note": "К какому филиалу относится — не установлено"
+        }
+      ],
+      "notes": [
+        "Отзывы в сводке поиска смешанные: хвалят врачей, жалуются на неровный сервис."
+      ],
+      "doctors": [],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001019327689",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "dentmen",
+      "name": "DentMen",
+      "address": "ул. Шевченко, 6 (MedCity)",
+      "phones": [
+        "+996 777 35 31 08",
+        "+996 704 31 87 77"
+      ],
+      "links": {
+        "medelement": "https://medelement.com/companies/clinics/605155871712669191",
+        "2gis": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D1%80%D1%8F%D0%B4%D0%BE%D0%BC"
+      },
+      "services": [
+        "ортодонтия",
+        "хирургия",
+        "КТ"
+      ],
+      "services_source": {
+        "url": "https://medelement.com/companies/clinics/605155871712669191",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 5.0,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001096974608/tab/info",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "reviews_count": 14
+        }
+      ],
+      "notes": [
+        "Мало отзывов: идеальные 5.0 при 14 отзывах статистически почти ничего не значат."
+      ],
+      "doctors": [],
+      "sources": []
+    },
+    {
+      "id": "medikon",
+      "name": "Медикон",
+      "address": "ул. Кольбаева, 12/3, 1 этаж",
+      "gis_firm_id": "70000001068633720",
+      "phones": [
+        "+996 558 39 97 59"
+      ],
+      "hours": "9:00–19:00",
+      "links": {
+        "medelement": "https://medelement.com/companies/clinics/148281021711620102"
+      },
+      "services": [
+        "челюстно-лицевая хирургия",
+        "лечение во сне (дети и взрослые)",
+        "ортодонтия",
+        "хирургия",
+        "КТ"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001068633720",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001068633720",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 64
+        }
+      ],
+      "awards": [
+        {
+          "title": "2GIS Awards 2025 — лучшая стоматология",
+          "confidence": "низкая",
+          "note": "Только по поисковой сводке"
+        }
+      ],
+      "doctors": [],
+      "notes": [],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001068633720",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "miswak",
+      "name": "Miswak",
+      "address": "ул. Кольбаева, 43/1",
+      "gis_firm_id": "70000001085329759",
+      "services": [
+        "ортодонтия",
+        "ортопедия",
+        "хирургия",
+        "имплантация",
+        "пародонтология",
+        "детская стоматология",
+        "рентген"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001085329759/tab/reviews",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 5.0,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001085329759/tab/reviews",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 125
+        }
+      ],
+      "phones": [],
+      "doctors": [],
+      "notes": [],
+      "links": {},
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001085329759",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "universal-dent",
+      "name": "Универсал Дент",
+      "address": "ул. 7 апреля, 2/12 (мкр Улан-2)",
+      "gis_firm_id": "70000001025459719",
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.8,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001025459719/tab/reviews",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 40,
+          "reviews_count": 24
+        }
+      ],
+      "phones": [],
+      "services": [],
+      "doctors": [],
+      "notes": [],
+      "links": {},
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001025459719",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "denta-kg",
+      "name": "Дента kg",
+      "address": "ул. Токтогула, 208/1, 2 этаж",
+      "gis_firm_id": "70000001025304584",
+      "phones": [
+        "+996 312 31 80 95",
+        "+996 555 31 80 95"
+      ],
+      "links": {
+        "medelement": "https://medelement.com/companies/clinics/153767471708431826"
+      },
+      "services": [
+        "терапия",
+        "ортодонтия",
+        "ортопедия",
+        "имплантация",
+        "детская стоматология",
+        "лечение под микроскопом"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001025304584",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.9,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001025304584",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 135
+        }
+      ],
+      "notes": [
+        "2 этаж — уточните наличие лифта, если это важно."
+      ],
+      "doctors": [],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001025304584",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "smile-clinic",
+      "name": "Smile clinic",
+      "address": "мкр Джал-23, 18/2",
+      "is_24_7": true,
+      "links": {
+        "2gis": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5"
+      },
+      "services": [
+        "круглосуточный приём"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.8,
+          "source": {
+            "url": "https://2gis.kg/bishkek/search/%D0%A1%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F%20%D0%B2%20%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA%D0%B5",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "ratings_count": 432
+        }
+      ],
+      "notes": [
+        "Номер карточки 2ГИС не найден — ссылка ведёт на поиск."
+      ],
+      "phones": [],
+      "doctors": [],
+      "sources": []
+    },
+    {
+      "id": "triovital",
+      "name": "Triovital",
+      "address": "пр. Чынгыза Айтматова, 41, 1 этаж",
+      "district": "Ленинский",
+      "gis_firm_id": "70000001019352613",
+      "phones": [
+        "+996 312 54 70 40",
+        "+996 556 33 05 03",
+        "+996 779 33 05 03"
+      ],
+      "hours": "Ежедневно 9:00–18:00",
+      "services": [
+        "ортодонтия",
+        "протезирование",
+        "имплантация",
+        "детская стоматология",
+        "КТ",
+        "лечение под микроскопом"
+      ],
+      "services_source": {
+        "url": "https://2gis.kg/bishkek/firm/70000001019352613",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet",
+        "title": "Рубрики 2ГИС"
+      },
+      "ratings": [
+        {
+          "platform": "2gis",
+          "rating": 4.0,
+          "source": {
+            "url": "https://2gis.kg/bishkek/firm/70000001019352613/tab/reviews",
+            "observed": "2026-10-01",
+            "via": "web_search_snippet"
+          },
+          "reviews_count": 32
+        }
+      ],
+      "doctors": [
+        {
+          "name": "Юрченко Виталий",
+          "role": "стоматолог",
+          "claims": [
+            {
+              "title": "Стоматолог (по данным СМИ)",
+              "evidence": {
+                "level": 1,
+                "source": {
+                  "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+                  "observed": "2026-10-01",
+                  "via": "media"
+                }
+              },
+              "kind": "declared_specialty"
+            }
+          ],
+          "sources": [
+            {
+              "url": "https://kaktus.media/doc/509896_5_stomatologov_bishkeka._adresa_telefony_stoimost_yslyg.html",
+              "observed": "2026-10-01",
+              "via": "media"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Консультация 500 сом (kaktus.media)."
+      ],
+      "links": {},
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001019352613",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    },
+    {
+      "id": "milky-way",
+      "name": "Млечный Путь",
+      "address": "ул. Токтоналиева, 104/6",
+      "website": "https://milkyway.kg",
+      "phones": [
+        "+996 550 894 894"
+      ],
+      "services": [
+        "лечение под седацией (Севоран)",
+        "детская стоматология",
+        "имплантация",
+        "брекеты"
+      ],
+      "services_source": {
+        "url": "https://milkyway.kg/",
+        "observed": "2026-10-01",
+        "via": "clinic_claim",
+        "title": "Сайт клиники"
+      },
+      "notes": [
+        "Седация/наркоз требуют анестезиолога и отдельного вида лицензии — проверьте это в первую очередь.",
+        "Рейтинг 2ГИС получить не удалось."
+      ],
+      "ratings": [],
+      "doctors": [],
+      "links": {},
+      "sources": []
+    },
+    {
+      "id": "implant-service",
+      "name": "Implant Dental Service (Имплант-сервис)",
+      "address": "ул. Сагынбая Манасчы, 77",
+      "gis_firm_id": "70000001021222141",
+      "phones": [
+        "+996 312 46 07 07",
+        "+996 556 05 46 83",
+        "+996 777 91 07 07"
+      ],
+      "links": {
+        "medelement": "https://company.medelement.com/landing/849622471711632543"
+      },
+      "services": [
+        "имплантация"
+      ],
+      "services_source": {
+        "url": "https://company.medelement.com/landing/849622471711632543",
+        "observed": "2026-10-01",
+        "via": "web_search_snippet"
+      },
+      "notes": [
+        "Рейтинг 2ГИС получить не удалось."
+      ],
+      "ratings": [],
+      "doctors": [],
+      "sources": [
+        {
+          "url": "https://2gis.kg/bishkek/firm/70000001021222141",
+          "observed": "2026-10-01",
+          "via": "web_search_snippet",
+          "title": "Карточка 2ГИС"
+        }
+      ]
+    }
+  ]
+}

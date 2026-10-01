@@ -1,104 +1,58 @@
 import json
 from pathlib import Path
-from typing import List, Optional
-from datetime import datetime
-from app.models import Dentist, Review, ReviewCreate
+from typing import Dict, List, Optional
 
-DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "dentists.json"
+from app.models import Clinic, ReviewAnalysis
 
-class DentistDatabase:
-    def __init__(self, filepath: Path = DATA_FILE):
-        self.filepath = filepath
-        self._dentists: List[Dentist] = []
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+CLINICS_FILE = DATA_DIR / "clinics.json"
+LEGACY_FILE = DATA_DIR / "legacy_audit.json"
+ANALYSES_DIR = DATA_DIR / "review_analyses"
+
+
+class ClinicRepository:
+    def __init__(self, clinics_file: Path = CLINICS_FILE, analyses_dir: Path = ANALYSES_DIR):
+        self.clinics_file = clinics_file
+        self.analyses_dir = analyses_dir
+        self.meta: Dict = {}
+        self._clinics: List[Clinic] = []
         self.load()
 
-    def load(self):
-        if not self.filepath.exists():
-            self._dentists = []
-            return
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            raw_data = json.load(f)
-            self._dentists = [Dentist(**item) for item in raw_data]
+    def load(self) -> None:
+        raw = json.loads(self.clinics_file.read_text(encoding="utf-8"))
+        self.meta = raw.get("meta", {})
+        self._clinics = [Clinic(**c) for c in raw["clinics"]]
 
-    def save(self):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            raw = [d.model_dump() for d in self._dentists]
-            json.dump(raw, f, ensure_ascii=False, indent=2)
+    def save(self) -> None:
+        payload = {"meta": self.meta, "clinics": [c.model_dump(exclude_none=True) for c in self._clinics]}
+        self.clinics_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    def get_all(self) -> List[Dentist]:
-        return self._dentists
+    def all(self) -> List[Clinic]:
+        return self._clinics
 
-    def get_by_id(self, dentist_id: str) -> Optional[Dentist]:
-        for d in self._dentists:
-            if d.id == dentist_id:
-                return d
-        return None
+    def get(self, clinic_id: str) -> Optional[Clinic]:
+        return next((c for c in self._clinics if c.id == clinic_id), None)
 
-    def search_and_filter(
-        self,
-        query: Optional[str] = None,
-        specialization: Optional[str] = None,
-        district: Optional[str] = None,
-        price_level: Optional[str] = None,
-        min_rating: Optional[float] = None,
-        only_24_7: bool = False
-    ) -> List[Dentist]:
-        results = self._dentists
+    def analyses(self) -> Dict[str, ReviewAnalysis]:
+        """Результаты анализа отзывов, сохранённые tools/import_reviews.py."""
+        out: Dict[str, ReviewAnalysis] = {}
+        if not self.analyses_dir.exists():
+            return out
+        for f in self.analyses_dir.glob("*.json"):
+            data = json.loads(f.read_text(encoding="utf-8"))
+            out[f.stem] = ReviewAnalysis(**data["analysis"])
+        return out
 
-        if query:
-            q = query.lower().strip()
-            results = [
-                d for d in results
-                if q in d.name.lower()
-                or q in d.clinic.lower()
-                or q in d.address.lower()
-                or q in d.description.lower()
-                or any(q in s.lower() for s in d.specializations)
-                or any(q in s.lower() for s in d.services.keys())
-            ]
+    def save_analysis(self, clinic_id: str, analysis: ReviewAnalysis, meta: Dict) -> Path:
+        self.analyses_dir.mkdir(parents=True, exist_ok=True)
+        path = self.analyses_dir / f"{clinic_id}.json"
+        path.write_text(json.dumps({"meta": meta, "analysis": analysis.model_dump()}, ensure_ascii=False, indent=2),
+                        encoding="utf-8")
+        return path
 
-        if specialization and specialization != "Все":
-            s_low = specialization.lower()
-            results = [
-                d for d in results
-                if any(s_low in spec.lower() for spec in d.specializations)
-                or any(s_low in s.lower() for s in d.services.keys())
-            ]
 
-        if district and district != "Все":
-            d_low = district.lower()
-            results = [d for d in results if d_low in d.district.lower()]
+def load_legacy_audit() -> Dict:
+    return json.loads(LEGACY_FILE.read_text(encoding="utf-8"))
 
-        if price_level and price_level != "Все":
-            results = [d for d in results if d.price_level.lower() == price_level.lower()]
 
-        if min_rating:
-            results = [d for d in results if d.rating >= min_rating]
-
-        if only_24_7:
-            results = [d for d in results if d.is_24_7]
-
-        return results
-
-    def add_review(self, dentist_id: str, review_in: ReviewCreate) -> Optional[Dentist]:
-        dentist = self.get_by_id(dentist_id)
-        if not dentist:
-            return None
-
-        new_review = Review(
-            author=review_in.author,
-            rating=review_in.rating,
-            date=datetime.now().strftime("%d.%m.%Y"),
-            text=review_in.text
-        )
-
-        dentist.sample_reviews.insert(0, new_review)
-        # Update rating & reviews count
-        total_rating = (dentist.rating * dentist.reviews_count) + review_in.rating
-        dentist.reviews_count += 1
-        dentist.rating = round(total_rating / dentist.reviews_count, 2)
-
-        self.save()
-        return dentist
-
-db = DentistDatabase()
+repo = ClinicRepository()
