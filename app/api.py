@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from collections import Counter
 
+from app import app_version
 from app.database import load_legacy_audit, repo
 from app.importers import parse_reviews
 from app.matching import TOPICS, coverage, detect_topics, match
@@ -49,6 +50,7 @@ def asset_version() -> str:
     files = (BASE_DIR / "static").rglob("*")
     return str(int(max((f.stat().st_mtime for f in files if f.is_file()), default=0)))
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+APP_VERSION = app_version()
 
 
 def _clinic_payload(clinic: Clinic) -> Dict:
@@ -119,7 +121,7 @@ def _ranked() -> List[Dict]:
 async def home_page(request: Request):
     return templates.TemplateResponse(request=request, name="index.html",
                                       context={"topics": {k: v["label"] for k, v in TOPICS.items()},
-                                               "v": asset_version()})
+                                               "v": asset_version(), "version": APP_VERSION})
 
 
 @app.get("/api/meta")
@@ -130,6 +132,7 @@ def get_meta():
     big = [r for r in rated if (r["score"]["volume"] or 0) >= 100]
     return {
         **repo.meta,
+        "version": APP_VERSION,
         "gis": repo.gis_meta,
         "registry": load_registry()["licenses"]["meta"],
         "clinics_total": len(ranked),

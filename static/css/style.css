@@ -293,3 +293,5 @@ h1 { font-size: 28px; line-height: 1.25; margin: 8px 0 8px; }
   .components, .two-col { grid-template-columns: 1fr; }
   .bar { grid-template-columns: 1fr 80px 28px; }
 }
+
+.footer .version { margin-top: 6px; opacity: .7; }
