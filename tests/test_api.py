@@ -64,3 +64,10 @@ def test_analyze_credential():
 def test_methodology_and_audit():
     assert "duplicates" in client.get("/api/methodology").json()["review_references"]
     assert client.get("/api/legacy-audit").json()["entries"]
+
+
+def test_static_assets_are_versioned_and_revalidated():
+    page = client.get("/")
+    assert "app.js?v=" in page.text and "style.css?v=" in page.text
+    assert page.headers["cache-control"] == "no-cache"
+    assert client.get("/static/js/app.js").headers["cache-control"] == "no-cache"

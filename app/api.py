@@ -29,6 +29,21 @@ app = FastAPI(
     version="2.0.0",
 )
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+
+@app.middleware("http")
+async def revalidate_static(request: Request, call_next):
+    """Браузер не должен держать старые app.js/style.css после обновления программы."""
+    response = await call_next(request)
+    if request.url.path.startswith("/static/") or request.url.path == "/":
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
+def asset_version() -> str:
+    """Меняется при любом изменении статики — ссылки вида app.js?v=… не берутся из старого кэша."""
+    files = (BASE_DIR / "static").rglob("*")
+    return str(int(max((f.stat().st_mtime for f in files if f.is_file()), default=0)))
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
@@ -94,7 +109,8 @@ def _ranked() -> List[Dict]:
 @app.get("/", response_class=HTMLResponse)
 async def home_page(request: Request):
     return templates.TemplateResponse(request=request, name="index.html",
-                                      context={"topics": {k: v["label"] for k, v in TOPICS.items()}})
+                                      context={"topics": {k: v["label"] for k, v in TOPICS.items()},
+                                               "v": asset_version()})
 
 
 @app.get("/api/meta")
