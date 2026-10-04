@@ -295,3 +295,28 @@ h1 { font-size: 28px; line-height: 1.25; margin: 8px 0 8px; }
 }
 
 .footer .version { margin-top: 6px; opacity: .7; }
+
+/* ---- подбор врачей ---- */
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin: 14px 0 4px; background: var(--surface); }
+.seg-btn { background: none; border: 0; padding: 9px 22px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.seg-btn.active { background: var(--accent); color: #fff; }
+.fit { text-align: right; line-height: 1.1; }
+.fit b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
+.fit span { font-size: 12px; color: var(--muted); }
+.reasons { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.rs { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; font-size: 14px; overflow-wrap: anywhere; }
+.sg { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; margin-top: 1px; }
+.rs.plus .sg { background: var(--good-bg); color: var(--good); }
+.rs.minus .sg { background: var(--low-bg); color: var(--low); }
+.rs.unk .sg { background: var(--na-bg); color: var(--na); }
+.basis { font-style: normal; font-size: 11.5px; font-weight: 600; padding: 1px 7px; border-radius: 999px; margin-left: 4px; white-space: nowrap; }
+.basis.confirmed { background: var(--good-bg); color: var(--good); }
+.basis.claimed { background: var(--mid-bg); color: var(--mid); }
+.basis.unknown { background: var(--na-bg); color: var(--na); }
+details.unk { margin-top: 8px; font-size: 14px; }
+details.unk summary { cursor: pointer; color: var(--accent); }
+.doc-rec .badges { margin-top: 10px; }
+.tips { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: var(--surface); }
+.tips ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+
+[hidden] { display: none !important; }

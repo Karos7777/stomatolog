@@ -83,7 +83,75 @@ function setTab(name) {
 
 /* ============================================================ ПОДОБРАТЬ */
 
-let pickState = { need: null, limit: 5 };
+let pickState = { need: null, limit: 5, view: "doctors" };
+let META = null;
+
+const BASIS = { "подтверждено": "confirmed", "заявлено": "claimed", "нет данных": "unknown" };
+const SIGN = { "+": ["plus", "+"], "-": ["minus", "−"], "?": ["unk", "?"] };
+
+function reasonsHtml(reasons) {
+  const li = (r) => `<li class="rs ${SIGN[r.sign][0]}"><span class="sg">${SIGN[r.sign][1]}</span>
+    <span>${esc(r.text)} <em class="basis ${BASIS[r.basis]}">${esc(r.basis)}</em></span></li>`;
+  const shown = reasons.filter((r) => r.basis !== "нет данных"), unknown = reasons.filter((r) => r.basis === "нет данных");
+  return `<ul class="reasons">${shown.map(li).join("")}</ul>` +
+    (unknown.length ? `<details class="unk"><summary>Чего мы не знаем (${unknown.length})</summary><ul class="reasons">${unknown.map(li).join("")}</ul></details>` : "");
+}
+
+function docRecCard(d, n) {
+  const c = d.clinic;
+  const others = d.other_clinics.length ? ` · ещё: ${esc(d.other_clinics.slice(0, 3).join(", "))}` : "";
+  return `<article class="rec doc-rec conf-${esc(d.confidence)}">
+    <div class="rec-head">
+      <div class="rec-num">${n}</div>
+      <div class="rec-title"><h3>${esc(d.name)}</h3>
+        <div class="muted">${esc(d.specialties.join(", ") || "Стоматолог")}${d.experience ? ` · стаж ${d.experience} лет` : ""}</div></div>
+      <div class="fit" title="Соответствие задаче по бумагам, а не качество лечения"><b>${d.score}</b><span>из 100</span></div>
+    </div>
+    <div class="badges">
+      ${d.profile_match ? '<span class="badge good">Специальность указана</span>' : '<span class="badge na">Общий стоматолог</span>'}
+      ${d.documents_verified ? '<span class="badge good">Документы проверены</span>' : '<span class="badge na">Документы не проверены</span>'}
+      <span class="badge info">Достоверность: ${esc(d.confidence)}</span>
+    </div>
+    ${reasonsHtml(d.reasons)}
+    <div class="small">${c ? `Принимает: <a href="#" data-open="${esc(c.id)}">${esc(c.name)}</a> <span class="muted">(${esc(c.address)})</span>${others}` : "Клинику определить не удалось"}</div>
+    <div class="actions"><a class="btn ghost sm" href="${esc(d.url)}" target="_blank" rel="noopener">Анкета на YDoc ↗</a>
+      ${c ? `<button class="btn ghost sm" data-open="${esc(c.id)}">Клиника: подробнее</button>` : ""}</div>
+  </article>`;
+}
+
+function syncPickView() {
+  $$(".seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.view === pickState.view));
+  $$(".only-doctors").forEach((e) => { e.hidden = pickState.view !== "doctors"; });
+  $$(".only-clinics").forEach((e) => { e.hidden = pickState.view !== "clinics"; });
+  $("#verified-label").textContent = pickState.view === "doctors" ? "Только врачи с проверенными документами" : "Только где есть врачи с проверенными дипломами";
+  const meta = META?.doctor_needs?.[pickState.need];
+  $("#opt-profile span").textContent = meta ? `В анкете указано: ${meta.specialty_label}` : "";
+  $("#opt-equip span").textContent = meta?.equipment_label ? `Клиника указывает: ${meta.equipment_label}` : "";
+  $("#opt-equip").hidden = pickState.view !== "doctors" || !meta?.equipment_label;
+}
+
+async function runPickDoctors() {
+  const out = $("#pick-out");
+  out.innerHTML = '<div class="placeholder">Подбираем врачей…</div>';
+  const body = { need: pickState.need, limit: pickState.limit, only_profile: $("#only-profile").checked,
+    require_equipment: $("#req-equip").checked && !$("#opt-equip").hidden, verified_docs: $("#verified-docs").checked };
+  try {
+    const res = await api("/api/recommend/doctors", { method: "POST", body: JSON.stringify(body) });
+    out.innerHTML = res.items.length ? `
+      <div class="summary"><b>${esc(res.label)}: подходят ${res.total} врачей.</b>
+        <span>У ${res.with_profile} в анкете указано: ${esc(res.specialty_label)}</span></div>
+      ${res.tips && res.tips.length ? `<div class="tips"><b>Что увидеть на приёме — без вопросов, они всегда ответят «да»:</b>
+        <ul>${res.tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
+      ${res.items.map((d, i) => docRecCard(d, i + 1)).join("")}
+      ${res.total > res.items.length && pickState.limit < 50 ? '<div class="more-row"><span></span><button class="btn ghost" id="pick-more">Показать ещё 5</button></div>' : ""}
+      <p class="hint">Число справа — насколько анкета врача подходит под задачу, а не качество лечения. Каждая причина помечена:
+        «подтверждено» (документ сверил YDoc, запись есть в реестре), «заявлено» (врач или клиника пишут сами), «нет данных».
+        Как врач работает руками, видно только на приёме.</p>`
+      : '<div class="placeholder">Таких врачей не нашлось. Снимите галочки или выберите другую задачу.</div>';
+  } catch (e) {
+    out.innerHTML = `<div class="error">${esc(e.message)}</div>`;
+  }
+}
 
 async function getPosition() {
   return new Promise((resolve) => {
@@ -96,6 +164,8 @@ async function getPosition() {
 async function runPick() {
   if (!pickState.need) return;
   $$(".need").forEach((b) => b.classList.toggle("active", b.dataset.need === pickState.need));
+  syncPickView();
+  if (pickState.view === "doctors") return runPickDoctors();
   const out = $("#pick-out");
   out.innerHTML = '<div class="placeholder">Подбираем…</div>';
   const body = { need: pickState.need, limit: pickState.limit, verified_doctors: $("#verified-docs").checked };
@@ -437,7 +507,8 @@ async function loadHow() {
 
 async function loadDataLine() {
   try {
-    const m = await api("/api/meta");
+    const m = META = await api("/api/meta");
+    syncPickView();
     $("#data-line").innerHTML = `Проверено: ${m.clinics_total} стоматологий из 2ГИС · реестр лицензий Минздрава на ${esc(m.registry?.as_of || "—")}
       · ${m.doctors?.total ?? 0} анкет врачей YDoc (у ${m.doctors?.verified ?? 0} проверен диплом). <a href="#" data-tab-link="how">Как это работает</a>`;
   } catch (_) { /* не критично */ }
@@ -449,8 +520,10 @@ document.addEventListener("DOMContentLoaded", () => {
   $$(".tab").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
   loadDataLine();
 
-  $$(".need").forEach((b) => b.addEventListener("click", () => { pickState = { need: b.dataset.need, limit: 5 }; runPick(); }));
-  ["#near", "#verified-docs"].forEach((s) => $(s).addEventListener("change", () => runPick()));
+  $$(".need").forEach((b) => b.addEventListener("click", () => { pickState = { ...pickState, need: b.dataset.need, limit: 5 }; runPick(); }));
+  $$(".seg-btn").forEach((b) => b.addEventListener("click", () => { pickState = { ...pickState, view: b.dataset.view, limit: 5 }; runPick(); }));
+  ["#near", "#verified-docs", "#only-profile", "#req-equip"].forEach((s) => $(s).addEventListener("change", () => { pickState.limit = 5; runPick(); }));
+  syncPickView();
 
   $("#doc-q").addEventListener("input", debounce(() => loadDoctors(), 300));
   ["#doc-spec", "#doc-verified", "#doc-foreign"].forEach((s) => $(s).addEventListener("change", () => loadDoctors()));

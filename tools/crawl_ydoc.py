@@ -1,6 +1,7 @@
 """Собрать стоматологов Бишкека с YDoc (ydoc.kg): образование, проверенные документы, отзывы.
 
-    python -m tools.crawl_ydoc            # ~420 страниц, 1 запрос в секунду
+    python -m tools.crawl_ydoc            # все анкеты стоматологов, 1 запрос в секунду
+    python -m tools.crawl_ydoc --reuse    # не скачивать заново анкеты, которые уже есть в data/ydoc_doctors.json
 
 Что берём с каждой публичной анкеты врача:
   • специальности и стаж;
@@ -23,7 +24,14 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 BASE = "https://ydoc.kg"
-LIST_URL = BASE + "/bishkek/stomatolog/?page={page}"
+LIST_URL = BASE + "/bishkek/{slug}/?page={page}"
+# Общий список «Стоматолог» содержит только врачей с этим тегом. Врачи, у которых указано лишь «Детский стоматолог»,
+# «Стоматолог-ортодонт» или «Стоматолог-эндодонтист», в нём не появляются, поэтому обходим списки по каждой специальности.
+# «ortoped» (без «стоматолог») не берём: там травматологи-ортопеды, а не стоматологи.
+LIST_SLUGS = ("stomatolog", "detskiy-stomatolog", "ortodont", "stomatolog-hirurg", "stomatolog-implantolog",
+              "stomatolog-ortoped", "stomatolog-endodontist", "stomatolog-gigienist", "chelyustno-licevoy-hirurg",
+              "paradontolog", "gnatolog", "detskiy-ortodont", "detskiy-stomatolog-ortoped", "detskiy-stomatolog-hirurg",
+              "detskiy-chelyustno-licevoy-hirurg", "detskiy-paradontolog")
 OUT = Path(__file__).resolve().parent.parent / "data" / "ydoc_doctors.json"
 UA = "DentBishkek/2.0 (personal non-commercial research; github.com/Karos7777/stomatolog)"
 
@@ -148,13 +156,13 @@ def parse_profile(page: str, url: str) -> Dict:
     }
 
 
-def crawl(opener: Callable = urllib.request.urlopen, pause: float = 1.0, max_pages: int = 40) -> List[Dict]:
+def list_links(slug: str, opener: Callable, pause: float, max_pages: int) -> List[str]:
     links: List[str] = []
     for page in range(1, max_pages + 1):
         try:
-            found = doctor_links(_get(LIST_URL.format(page=page), opener))
+            found = doctor_links(_get(LIST_URL.format(slug=slug, page=page), opener))
         except urllib.error.HTTPError as exc:
-            if exc.code == 404:   # страницы закончились
+            if exc.code == 404:   # у специальности нет такого списка или страницы закончились
                 break
             raise
         new = [l for l in found if l not in links]
@@ -162,14 +170,30 @@ def crawl(opener: Callable = urllib.request.urlopen, pause: float = 1.0, max_pag
             break
         links += new
         time.sleep(pause)
-    doctors = []
+    return links
+
+
+def crawl(opener: Callable = urllib.request.urlopen, pause: float = 1.0, max_pages: int = 40,
+          known: Optional[Dict[str, Dict]] = None, slugs=LIST_SLUGS) -> List[Dict]:
+    """known — уже скачанные анкеты по полному URL: их не запрашиваем повторно."""
+    known = known or {}
+    links: List[str] = []
+    for slug in slugs:
+        before = len(links)
+        links += [l for l in list_links(slug, opener, pause, max_pages) if l not in links]
+        print(f"  {slug}: +{len(links) - before} (всего {len(links)})", file=sys.stderr)
+    doctors, fresh = [], 0
     for i, link in enumerate(links, 1):
+        if BASE + link in known:
+            doctors.append(known[BASE + link])
+            continue
         try:
             doctors.append(parse_profile(_get(BASE + link, opener), link))
         except Exception as exc:  # noqa: BLE001 — одна битая анкета не должна останавливать сбор
             print(f"  ! {link}: {exc}", file=sys.stderr)
-        if i % 50 == 0:
-            print(f"  {i}/{len(links)}", file=sys.stderr)
+        fresh += 1
+        if fresh % 50 == 0:
+            print(f"  скачано {fresh}, просмотрено {i}/{len(links)}", file=sys.stderr)
         time.sleep(pause)
     return doctors
 
@@ -177,10 +201,14 @@ def crawl(opener: Callable = urllib.request.urlopen, pause: float = 1.0, max_pag
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pause", type=float, default=1.0, help="пауза между запросами, сек")
+    ap.add_argument("--reuse", action="store_true", help="не скачивать заново анкеты из data/ydoc_doctors.json")
     args = ap.parse_args(argv)
-    doctors = crawl(pause=args.pause)
-    OUT.write_text(json.dumps({"meta": {"source": "https://ydoc.kg/bishkek/stomatolog/", "fetched": date.today().isoformat(),
-                                        "doctors": len(doctors)},
+    known = {}
+    if args.reuse and OUT.exists():
+        known = {d["url"]: d for d in json.loads(OUT.read_text(encoding="utf-8"))["doctors"]}
+    doctors = crawl(pause=args.pause, known=known)
+    OUT.write_text(json.dumps({"meta": {"source": "https://ydoc.kg/bishkek/ (списки по специальностям стоматологии)",
+                                        "fetched": date.today().isoformat(), "doctors": len(doctors)},
                                "doctors": doctors}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"Собрано {len(doctors)} анкет → {OUT}")
     return 0

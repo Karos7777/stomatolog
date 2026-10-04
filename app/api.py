@@ -12,6 +12,7 @@ from collections import Counter
 
 from app import app_version
 from app.database import load_legacy_audit, repo
+from app.doctor_rank import NEEDS as DOCTOR_NEEDS, rank_doctors
 from app.importers import parse_reviews
 from app.matching import TOPICS, coverage, detect_topics, match
 from app.models import (EVIDENCE_LEVELS, Clinic, CredentialCheckRequest, CredentialVerdict,
@@ -149,6 +150,8 @@ def get_meta():
         "city_prior": city_prior(repo.all()),
         "weights": WEIGHTS,
         "topics": {k: v["label"] for k, v in TOPICS.items()},
+        "doctor_needs": {k: {"label": v["label"], "specialty_label": v["specialty_label"],
+                             "equipment_label": v.get("equipment_label")} for k, v in DOCTOR_NEEDS.items()},
     }
 
 
@@ -342,6 +345,28 @@ def recommend(req: RecommendRequest):
     counts = {k: sum(1 for x in rows if x["verdict"]["level"] == k) for k in VERDICT_ORDER}
     return {"need": need, "need_label": TOPICS[need]["label"] if need else None, "need_24_7": need_24_7,
             "total": len(rows), "counts": counts, "results": rows[:max(1, min(req.limit, 20))]}
+
+
+class DoctorRecommendRequest(BaseModel):
+    need: str
+    limit: int = 10
+    only_profile: bool = False         # только врачи, у которых нужная специальность указана в анкете
+    require_equipment: bool = False    # только если клиника указывает нужное оборудование (например, микроскоп)
+    verified_docs: bool = False        # только врачи, у которых YDoc сверил документы
+
+
+@app.post("/api/recommend/doctors")
+def recommend_doctors(req: DoctorRecommendRequest):
+    """Врач важнее клиники: ранжируем людей по тому, что в их анкетах говорит о нужной задаче (app/doctor_rank.py)."""
+    prof = DOCTOR_NEEDS.get(req.need)
+    if not prof:
+        raise HTTPException(status_code=400, detail="Неизвестная задача")
+    rows_by_id = {r["clinic"].id: r for r in _ranked()}
+    ranked = rank_doctors(repo.doctors, req.need, rows_by_id, req.only_profile, req.require_equipment, req.verified_docs)
+    return {"need": req.need, "label": prof["label"], "specialty_label": prof["specialty_label"],
+            "equipment_label": prof.get("equipment_label"), "tips": prof.get("tips", []),
+            "total": len(ranked), "with_profile": sum(1 for r in ranked if r["profile_match"]),
+            "items": ranked[:max(1, min(req.limit, 100))]}
 
 
 def _doctor_rows() -> List[Dict]:

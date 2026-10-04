@@ -18,6 +18,7 @@ from app.api import APP_VERSION, app
 TEMPLATE = Path(__file__).with_name("snapshot_template.html")
 NEEDS = ["caries", "emergency", "implant", "ortho", "kids", "extraction", "prosthetics", "hygiene", "sedation", "endo"]
 PER_NEED = 20          # столько клиник отдаёт /api/recommend (потолок API)
+DOCTORS_PER_NEED = 80  # столько лучших врачей по каждой задаче кладём в снимок
 
 STANDALONE = """<!doctype html>
 <html lang="ru">
@@ -75,6 +76,18 @@ def doctor_row(d):
     }
 
 
+def doctor_rec_row(r):
+    c = r["clinic"]
+    return {
+        "id": r["id"], "name": r["name"], "url": r["url"], "specialties": r["specialties"], "experience": r["experience"],
+        "score": r["score"], "confidence": r["confidence"], "profile": r["profile_match"], "equipment": r["equipment"],
+        "verified": r["documents_verified"], "foreign": r["foreign_countries"],
+        "reasons": [[x["sign"], x["text"], x["basis"]] for x in r["reasons"]],
+        "clinic": {"id": c["id"], "name": c["name"], "address": c["address"]} if c else None,
+        "others": r["other_clinics"][:3],
+    }
+
+
 def build() -> dict:
     client = TestClient(app)
     get = lambda url, **kw: client.get(url, **kw).json()
@@ -103,6 +116,12 @@ def build() -> dict:
                 "items": [{"id": x["id"], "level": x["verdict"]["level"], "checks": checks(x["verdict"])}
                           for x in res["results"]]}
 
+    doctor_recs = {}
+    for need in NEEDS:
+        res = client.post("/api/recommend/doctors", json={"need": need, "limit": DOCTORS_PER_NEED}).json()
+        doctor_recs[need] = {k: res[k] for k in ("label", "specialty_label", "equipment_label", "tips", "total", "with_profile")}
+        doctor_recs[need]["items"] = [doctor_rec_row(r) for r in res["items"]]
+
     reviews = {r["id"]: get(f"/api/check/reviews/{r['id']}")["points"] for r in rows}
     return {
         "generated": date.today().isoformat(), "version": APP_VERSION,
@@ -110,7 +129,7 @@ def build() -> dict:
                  "clinics": len(rows), "license_statuses": meta["license_statuses"],
                  "unlicensed_at_address": meta["unlicensed_at_address"], "doctors": page["stats"],
                  "big_clinics": meta["perfect_big"]},
-        "needs": NEEDS, "recommend": rec, "clinics": rows, "reviews": reviews,
+        "needs": NEEDS, "recommend": rec, "doctor_recs": doctor_recs, "clinics": rows, "reviews": reviews,
         "doctors": [doctor_row(d) for d in docs], "specialties": page["specialties"],
         "districts": sorted({r["district"] for r in rows if r["district"]}),
     }

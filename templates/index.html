@@ -33,8 +33,8 @@
     <!-- ============ ПОДОБРАТЬ ============ -->
     <section class="panel active" id="tab-pick">
       <div class="hero">
-        <h1>Найдём стоматолога, которому можно доверять</h1>
-        <p class="lead">Выберите, что нужно. Покажем лучшие клиники и объясним простыми словами: есть ли лицензия, честные ли отзывы и кто врачи.</p>
+        <h1>Найдём врача, которому можно доверять</h1>
+        <p class="lead">Выберите, что нужно. Покажем врачей, которые подходят именно под эту задачу, и объясним, что о них подтверждено, а что врач или клиника только заявляют.</p>
         <div class="needs">
           <button class="need" data-need="caries"><span>🦷</span>Вылечить зуб</button>
           <button class="need" data-need="emergency"><span>⚡</span>Болит прямо сейчас</button>
@@ -47,9 +47,15 @@
           <button class="need" data-need="sedation"><span>😴</span>Лечение во сне</button>
           <button class="need" data-need="endo"><span>🔬</span>Каналы, микроскоп</button>
         </div>
+        <div class="seg" role="group" aria-label="Что показать">
+          <button class="seg-btn active" data-view="doctors">Врачи</button>
+          <button class="seg-btn" data-view="clinics">Клиники</button>
+        </div>
         <div class="pick-options">
-          <label class="check"><input type="checkbox" id="near"> Рядом со мной (до 5 км)</label>
-          <label class="check"><input type="checkbox" id="verified-docs"> Только где есть врачи с проверенными дипломами</label>
+          <label class="check only-doctors" id="opt-profile"><input type="checkbox" id="only-profile"> <span></span></label>
+          <label class="check only-doctors" id="opt-equip"><input type="checkbox" id="req-equip"> <span></span></label>
+          <label class="check only-clinics"><input type="checkbox" id="near"> Рядом со мной (до 5 км)</label>
+          <label class="check"><input type="checkbox" id="verified-docs"> <span id="verified-label">Только врачи с проверенными документами</span></label>
         </div>
         <p class="data-line" id="data-line"></p>
       </div>

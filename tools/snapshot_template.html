@@ -57,6 +57,25 @@ h3 { font-size: 16px; font-weight: 650; }
 .opt { display: flex; gap: 10px; align-items: flex-start; color: var(--ink); }
 .opt input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
 .dataline { font-size: 12.5px; color: var(--muted); }
+.seg { display: inline-flex; justify-self: start; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.seg-btn { background: none; border: 0; padding: 9px 22px; min-height: 44px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.seg-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.fit { text-align: right; line-height: 1.1; }
+.fit b { display: block; font: 500 24px var(--mono); }
+.fit span { font-size: 12px; color: var(--muted); }
+.reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rs { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; font-size: 14px; overflow-wrap: anywhere; }
+.sg { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 600 12px var(--mono); }
+.rs.plus .sg { background: var(--good-bg); color: var(--good); }
+.rs.minus .sg { background: var(--bad-bg); color: var(--bad); }
+.rs.unk .sg { background: var(--unk-bg); color: var(--unk); }
+.basis { font: 600 11px var(--font); padding: 1px 7px; border-radius: 999px; margin-left: 4px; white-space: nowrap; }
+.basis.confirmed { background: var(--good-bg); color: var(--good); }
+.basis.claimed { background: var(--warn-bg); color: var(--warn); }
+.basis.unknown { background: var(--unk-bg); color: var(--unk); }
+details.unk summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+.tips { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); font-size: 14px; }
+.tips ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; }
 
 .summary { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
 .summary .n { font-family: var(--mono); font-weight: 500; }
@@ -139,11 +158,19 @@ footer { padding-block: 8px 28px; font-size: 12.5px; color: var(--muted); }
 <main class="wrap">
   <section id="tab-pick" class="stack" role="tabpanel">
     <div class="stack">
-      <h1>Подберите стоматолога</h1>
-      <p class="lead">Выберите, что нужно. Для каждой клиники показываем четыре проверки: лицензия Минздрава, отзывы, врачи и подходит ли клиника под задачу.</p>
+      <h1>Подберите врача</h1>
+      <p class="lead">Выберите, что нужно. Покажем врачей, которые подходят под задачу, и что о каждом подтверждено, а что только заявлено. Клиники можно посмотреть отдельно.</p>
     </div>
     <div class="needs" id="needs"></div>
-    <label class="opt"><input type="checkbox" id="p-verified"><span>Только где есть врачи с проверенными документами</span></label>
+    <div class="seg" role="group" aria-label="Что показать">
+      <button class="seg-btn" data-view="doctors" aria-pressed="true">Врачи</button>
+      <button class="seg-btn" data-view="clinics" aria-pressed="false">Клиники</button>
+    </div>
+    <div class="stack" style="gap:8px">
+      <label class="opt" id="o-profile"><input type="checkbox" id="p-profile"><span></span></label>
+      <label class="opt" id="o-equip"><input type="checkbox" id="p-equip"><span></span></label>
+      <label class="opt"><input type="checkbox" id="p-verified"><span id="p-verified-label">Только врачи с проверенными документами</span></label>
+    </div>
     <p class="dataline" id="dataline"></p>
     <div id="pick-out" class="stack"></div>
   </section>
@@ -256,14 +283,68 @@ footer { padding-block: 8px 28px; font-size: 12.5px; color: var(--muted); }
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
 
   /* ---------- Подобрать ---------- */
-  const pick = { need: NEEDS.some((n) => n[0] === "caries") ? "caries" : NEEDS[0][0], shown: 5 };
+  const pick = { view: "doctors", need: NEEDS.some((n) => n[0] === "caries") ? "caries" : NEEDS[0][0], shown: 5 };
   $("#needs").innerHTML = NEEDS.map((n) => `<button class="need" data-need="${n[0]}" aria-pressed="false">${esc(n[1])}</button>`).join("");
+  const BASIS = { "подтверждено": "confirmed", "заявлено": "claimed", "нет данных": "unknown" };
+  const SIGN = { "+": ["plus", "+"], "-": ["minus", "−"], "?": ["unk", "?"] };
+
+  function reasonsHtml(reasons) {
+    const li = (r) => `<li class="rs ${SIGN[r[0]][0]}"><span class="sg">${SIGN[r[0]][1]}</span><span>${esc(r[1])} <em class="basis ${BASIS[r[2]]}">${esc(r[2])}</em></span></li>`;
+    const shown = reasons.filter((r) => r[2] !== "нет данных"), unknown = reasons.filter((r) => r[2] === "нет данных");
+    return `<ul class="reasons">${shown.map(li).join("")}</ul>` +
+      (unknown.length ? `<details class="more unk"><summary>Чего мы не знаем (${unknown.length})</summary><ul class="reasons" style="margin-top:8px">${unknown.map(li).join("")}</ul></details>` : "");
+  }
+
+  function docRecCard(d, pos) {
+    const c = d.clinic, full = c ? byId.get(c.id) : null;
+    return `<article class="card">
+      <div class="card-head"><span class="pos">${pos}</span>
+        <div><h3>${esc(d.name)}</h3><p class="addr">${esc(d.specialties.join(", ") || "Стоматолог")}${d.experience ? " · стаж " + d.experience + " лет" : ""}</p></div></div>
+      <div class="vrow"><div class="chips">
+          ${d.profile ? '<span class="chip good">Специальность указана</span>' : '<span class="chip">Общий стоматолог</span>'}
+          ${d.verified ? '<span class="chip good">Документы проверены</span>' : '<span class="chip">Документы не проверены</span>'}
+          <span class="chip info">Достоверность: ${esc(d.confidence)}</span></div>
+        <div class="fit" title="Соответствие задаче по бумагам, а не качество лечения"><b>${d.score}</b><span>из 100</span></div></div>
+      ${reasonsHtml(d.reasons)}
+      <p class="where">${c ? `Принимает: <button class="linkbtn" data-clinic-name="${esc(c.name)}">${esc(c.name)}</button> <span class="muted">(${esc(c.address)})</span>` +
+        (full ? ` · <span class="muted">${full.rating == null ? "без рейтинга" : fmt(full.rating) + " ★, " + full.volume + " оценок"}</span>` : "") : "Клинику определить не удалось"}
+        ${d.others.length ? `<span class="muted"> · ещё: ${esc(d.others.join(", "))}</span>` : ""}</p>
+      <div class="links"><a href="${esc(d.url)}" target="_blank" rel="noopener">Анкета на YDoc ↗</a></div></article>`;
+  }
+
+  function syncPick() {
+    document.querySelectorAll(".need").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.need === pick.need)));
+    document.querySelectorAll(".seg-btn").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === pick.view)));
+    const set = DATA.doctor_recs && DATA.doctor_recs[pick.need];
+    const doctorsView = pick.view === "doctors" && set;
+    $("#o-profile").hidden = !doctorsView; $("#o-equip").hidden = !doctorsView || !(set && set.equipment_label);
+    if (set) {
+      $("#o-profile span").textContent = "В анкете указано: " + set.specialty_label;
+      $("#o-equip span").textContent = set.equipment_label ? "Клиника указывает: " + set.equipment_label : "";
+    }
+    $("#p-verified-label").textContent = doctorsView ? "Только врачи с проверенными документами" : "Только где есть врачи с проверенными документами";
+    return doctorsView ? set : null;
+  }
 
   function renderPick() {
-    document.querySelectorAll(".need").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.need === pick.need)));
+    const dset = syncPick();
+    const out = $("#pick-out");
+    if (dset) {
+      const rows = dset.items.filter((d) => (!$("#p-profile").checked || d.profile) && (!$("#p-equip").checked || d.equipment) &&
+        (!$("#p-verified").checked || d.verified));
+      if (!rows.length) { out.innerHTML = '<div class="empty">Таких врачей не нашлось. Снимите галочки или выберите другую задачу.</div>'; return; }
+      out.innerHTML = `<div class="summary"><b>${esc(dset.label)}: подходят <span class="n">${dset.total}</span> врачей</b>
+          <span class="count">у ${dset.with_profile} в анкете указано: ${esc(dset.specialty_label)}</span></div>
+        ${dset.tips && dset.tips.length ? `<div class="tips"><b>Что увидеть на приёме. Спрашивать бесполезно: на вопросы всегда отвечают «да».</b><ul>${dset.tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
+        ${rows.slice(0, pick.shown).map((d, i) => docRecCard(d, i + 1)).join("")}
+        ${rows.length > pick.shown ? '<div class="more-row"><span class="muted">Лучшие ' + rows.length + ' из ' + dset.total + '</span><button class="btn" id="pick-more">Показать ещё 5</button></div>' : ""}
+        <p class="muted">Число справа показывает, насколько анкета врача подходит под задачу, а не качество лечения. Каждая причина помечена: «подтверждено» (документ сверил YDoc, запись есть в реестре), «заявлено» (врач или клиника пишут сами) и «нет данных». Как врач работает руками, видно только на приёме.</p>`;
+      const more = $("#pick-more");
+      if (more) more.addEventListener("click", () => { pick.shown += 5; renderPick(); });
+      return;
+    }
     const set = DATA.recommend[pick.need][$("#p-verified").checked ? "1" : "0"];
     const items = set.items.slice(0, pick.shown);
-    const out = $("#pick-out");
     if (!set.total) { out.innerHTML = '<div class="empty">Ничего не нашлось. Снимите галочку или выберите другую задачу.</div>'; return; }
     out.innerHTML = `<div class="summary"><b>${esc(set.label)}: <span class="n">${set.total}</span> клиник</b>
         <span class="count good"><i>${set.counts.good}</i> можно доверять</span>
@@ -279,7 +360,8 @@ footer { padding-block: 8px 28px; font-size: 12.5px; color: var(--muted); }
     const b = e.target.closest(".need");
     if (b) { pick.need = b.dataset.need; pick.shown = 5; renderPick(); }
   });
-  $("#p-verified").addEventListener("change", () => { pick.shown = 5; renderPick(); });
+  document.querySelectorAll(".seg-btn").forEach((b) => b.addEventListener("click", () => { pick.view = b.dataset.view; pick.shown = 5; renderPick(); }));
+  ["p-verified", "p-profile", "p-equip"].forEach((id) => $("#" + id).addEventListener("change", () => { pick.shown = 5; renderPick(); }));
 
   /* ---------- Врачи ---------- */
   const dstate = { shown: PAGE };
