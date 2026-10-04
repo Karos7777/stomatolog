@@ -1,0 +1,385 @@
+<title>DentBishkek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Макет: одна узкая колонка под телефон, липкая шапка с четырьмя вкладками, у каждой клиники четыре проверки в ряд.
+   Цвет: холодный бело-зелёный фон, один акцент (бирюза) и отдельные цвета состояний ✓ / ! / ✕ / ?. Номера лицензий и цифры — моноширинным. */
+:root {
+  --bg: #f0f5f4; --surface: #ffffff; --ink: #13201f; --muted: #52645f; --line: #d6e1de;
+  --accent: #0b6e69; --accent-soft: #dcefec; --on-accent: #ffffff;
+  --good: #17703f; --good-bg: #e0f3e8; --warn: #7a5200; --warn-bg: #fbeecb;
+  --bad: #a82a22; --bad-bg: #fae3e0; --unk: #566866; --unk-bg: #e6edec;
+  --font: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1514; --surface: #152120; --ink: #e5efee; --muted: #97aca9; --line: #27393a;
+    --accent: #54c2bb; --accent-soft: #17302f; --on-accent: #07201f;
+    --good: #67d08f; --good-bg: #153123; --warn: #e8bd5a; --warn-bg: #352a10;
+    --bad: #ff8d84; --bad-bg: #3a1a17; --unk: #9db0ae; --unk-bg: #1f2d2c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1514; --surface: #152120; --ink: #e5efee; --muted: #97aca9; --line: #27393a;
+  --accent: #54c2bb; --accent-soft: #17302f; --on-accent: #07201f;
+  --good: #67d08f; --good-bg: #153123; --warn: #e8bd5a; --warn-bg: #352a10;
+  --bad: #ff8d84; --bad-bg: #3a1a17; --unk: #9db0ae; --unk-bg: #1f2d2c; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--font); }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
+a { color: var(--accent); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-block: 12px 6px; }
+.brand b { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+.brand span { font-size: 12px; color: var(--muted); text-align: right; }
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 2px; font-weight: 500; color: var(--muted); cursor: pointer; }
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+main { padding-block: 18px 40px; display: grid; gap: 16px; }
+.lead { color: var(--muted); max-width: 60ch; }
+h1 { font-size: 24px; font-weight: 700; letter-spacing: -.015em; }
+h2 { font-size: 19px; font-weight: 650; }
+h3 { font-size: 16px; font-weight: 650; }
+.stack { display: grid; gap: 12px; }
+
+.needs { display: flex; flex-wrap: wrap; gap: 8px; }
+.need { min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 500; }
+.need[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+.opt { display: flex; gap: 10px; align-items: flex-start; color: var(--ink); }
+.opt input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.dataline { font-size: 12.5px; color: var(--muted); }
+
+.summary { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.summary .n { font-family: var(--mono); font-weight: 500; }
+.count { font-size: 13px; color: var(--muted); }
+.count i { font-style: normal; font-family: var(--mono); font-weight: 500; }
+.count.good i { color: var(--good); } .count.ok i { color: var(--warn); } .count.bad i { color: var(--bad); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 12px; }
+.card-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+.pos { font-family: var(--mono); font-size: 13px; color: var(--muted); min-width: 2ch; padding-top: 2px; }
+.card-head h3 { overflow-wrap: anywhere; }
+.addr { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.tag { display: inline-block; font: 500 11px var(--mono); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 6px; color: var(--muted); vertical-align: 2px; }
+.vrow { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; }
+.pill.good { background: var(--good-bg); color: var(--good); }
+.pill.ok { background: var(--warn-bg); color: var(--warn); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+.rate { font-family: var(--mono); font-size: 14px; }
+.rate small { color: var(--muted); font-size: 12px; }
+
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ck { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; }
+.ck b { font-weight: 600; display: block; overflow-wrap: anywhere; }
+.ck small { display: block; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.g { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 600 12px var(--mono); margin-top: 1px; }
+.ck.ok .g { background: var(--good-bg); color: var(--good); }
+.ck.warn .g { background: var(--warn-bg); color: var(--warn); }
+.ck.bad .g { background: var(--bad-bg); color: var(--bad); }
+.ck.unknown .g { background: var(--unk-bg); color: var(--unk); }
+
+details.more { border-top: 1px solid var(--line); padding-top: 10px; }
+details.more summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details.more ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13.5px; }
+.links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; align-items: center; }
+.links .phone { font-family: var(--mono); }
+.where { font-size: 13.5px; overflow-wrap: anywhere; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font-size: 13.5px; }
+
+.controls { display: grid; gap: 10px; }
+.controls .row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+input[type="search"], select { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.more-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.muted { color: var(--muted); font-size: 13px; }
+.btn { min-height: 44px; padding: 8px 18px; border-radius: 10px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); font-weight: 600; cursor: pointer; }
+.empty { padding: 28px 12px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; font-weight: 600; border-radius: 6px; padding: 2px 8px; background: var(--unk-bg); color: var(--unk); }
+.chip.good { background: var(--good-bg); color: var(--good); }
+.chip.info { background: var(--accent-soft); color: var(--accent); }
+.edu { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14px; }
+.edu li { overflow-wrap: anywhere; }
+.edu .hint { display: block; color: var(--muted); font-size: 12.5px; }
+.flags { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+.flags.bad { color: var(--bad); } .flags.warn { color: var(--warn); }
+
+.prose { display: grid; gap: 14px; max-width: 64ch; }
+.prose ul, .prose ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
+.legend { display: grid; gap: 8px; }
+footer { padding-block: 8px 28px; font-size: 12.5px; color: var(--muted); }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><b>DentBishkek</b><span id="stamp"></span></div>
+    <nav class="tabs" role="tablist" aria-label="Разделы">
+      <button class="tab" role="tab" data-tab="pick" aria-selected="true">Подобрать</button>
+      <button class="tab" role="tab" data-tab="doctors" aria-selected="false">Врачи</button>
+      <button class="tab" role="tab" data-tab="clinics" aria-selected="false">Клиники</button>
+      <button class="tab" role="tab" data-tab="about" aria-selected="false">Данные</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="tab-pick" class="stack" role="tabpanel">
+    <div class="stack">
+      <h1>Подберите стоматолога</h1>
+      <p class="lead">Выберите, что нужно. Для каждой клиники показываем четыре проверки: лицензия Минздрава, отзывы, врачи и подходит ли клиника под задачу.</p>
+    </div>
+    <div class="needs" id="needs"></div>
+    <label class="opt"><input type="checkbox" id="p-verified"><span>Только где есть врачи с проверенными документами</span></label>
+    <p class="dataline" id="dataline"></p>
+    <div id="pick-out" class="stack"></div>
+  </section>
+
+  <section id="tab-doctors" class="stack" role="tabpanel" hidden>
+    <div class="stack">
+      <h2>Врачи-стоматологи</h2>
+      <p class="lead" id="doc-stats"></p>
+    </div>
+    <div class="controls">
+      <input type="search" id="dq" placeholder="ФИО, клиника, вуз" autocomplete="off">
+      <select id="dspec" aria-label="Специальность"><option value="">Любая специальность</option></select>
+      <label class="opt"><input type="checkbox" id="dver"><span>Документы проверены</span></label>
+      <label class="opt"><input type="checkbox" id="dfor"><span>Учёба за рубежом</span></label>
+    </div>
+    <div id="doc-list" class="stack"></div>
+    <div class="more-row"><span id="doc-count" class="muted"></span><button class="btn" id="doc-more" hidden>Показать ещё</button></div>
+  </section>
+
+  <section id="tab-clinics" class="stack" role="tabpanel" hidden>
+    <h2>Все клиники</h2>
+    <div class="controls">
+      <input type="search" id="cq" placeholder="Название, улица или врач" autocomplete="off">
+      <div class="row">
+        <select id="clevel" aria-label="Вердикт">
+          <option value="">Любой вердикт</option><option value="good">Можно доверять</option>
+          <option value="ok">Проверьте пункты</option><option value="bad">Не рекомендуем без проверки</option>
+        </select>
+        <select id="clic" aria-label="Лицензия">
+          <option value="">Любая лицензия</option><option value="found">Лицензия найдена</option>
+          <option value="problems">Нет в реестре / другой адрес</option><option value="unlicensed">Выявлена работа без лицензии</option>
+        </select>
+      </div>
+      <div class="row">
+        <select id="cdist" aria-label="Район"><option value="">Любой район</option></select>
+        <select id="csort" aria-label="Порядок">
+          <option value="trust">Сначала надёжные</option><option value="rating">По рейтингу</option><option value="volume">По числу оценок</option>
+        </select>
+      </div>
+      <label class="opt"><input type="checkbox" id="cmulti"><span>Показывать многопрофильные медцентры</span></label>
+    </div>
+    <div id="clinic-list" class="stack"></div>
+    <div class="more-row"><span id="clinic-count" class="muted"></span><button class="btn" id="clinic-more" hidden>Показать ещё</button></div>
+  </section>
+
+  <section id="tab-about" role="tabpanel" hidden><div class="prose" id="about"></div></section>
+</main>
+
+<footer class="wrap">
+  Автоматическая оценка по открытым данным, а не заключение о качестве лечения. Перед приёмом попросите показать лицензию и диплом врача.
+</footer>
+
+<script type="application/json" id="data">/*__DATA__*/</script>
+<script>
+(function () {
+  const DATA = JSON.parse(document.getElementById("data").textContent);
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const LEVEL = { good: "Можно доверять", ok: "Проверьте пункты с !", bad: "Не рекомендуем без проверки" };
+  const GLYPH = { ok: "✓", warn: "!", bad: "✕", unknown: "?" };
+  const NEEDS = [["caries", "Вылечить зуб"], ["emergency", "Болит прямо сейчас"], ["implant", "Имплант"], ["ortho", "Брекеты, элайнеры"],
+    ["kids", "Ребёнку"], ["extraction", "Удалить зуб"], ["prosthetics", "Коронка, винир"], ["hygiene", "Чистка зубов"],
+    ["sedation", "Лечение во сне"], ["endo", "Каналы, микроскоп"]].filter((n) => DATA.recommend[n[0]]);
+  const byId = new Map(DATA.clinics.map((c) => [c.id, c]));
+  const doctors = DATA.doctors.map((d) => Object.assign({}, d, {
+    q: [d.name, d.specialties.join(" "), d.clinics.map((c) => c.name).join(" "), d.workplaces.join(" "),
+        d.education.map((e) => e.institution).join(" ")].join(" ").toLowerCase() }));
+  const fmt = (n) => (n == null ? "—" : Number(n).toFixed(1));
+  const PAGE = 30;
+
+  function dateRu(iso) {
+    const m = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+    const p = String(iso).split("-");
+    return p.length === 3 ? `${+p[2]} ${m[+p[1] - 1]} ${p[0]}` : iso;
+  }
+
+  /* ---------- общие куски ---------- */
+  function checksHtml(list) {
+    return `<ul class="checks">${list.map((c) => `<li class="ck ${esc(c[0])}"><span class="g" aria-hidden="true">${GLYPH[c[0]] || "?"}</span>
+      <div><b>${esc(c[1])}</b>${c[2] ? `<small>${esc(c[2])}</small>` : ""}</div></li>`).join("")}</ul>`;
+  }
+
+  function clinicCard(c, view, pos) {
+    const points = DATA.reviews[c.id] || [];
+    const revUrl = c.gis ? c.gis + "/tab/reviews" : null;
+    return `<article class="card">
+      <div class="card-head"><span class="pos">${esc(pos)}</span>
+        <div><h3>${esc(c.name)}${c.h24 ? '<span class="tag">24/7</span>' : ""}</h3>
+          <p class="addr">${esc(c.address)}${c.district ? " · " + esc(c.district) : ""}</p></div></div>
+      <div class="vrow"><span class="pill ${esc(view.level)}">${esc(LEVEL[view.level])}</span>
+        <span class="rate">${c.rating == null ? "нет рейтинга" : `${fmt(c.rating)} ★ <small>${c.volume} оценок</small>`}</span></div>
+      ${checksHtml(view.checks)}
+      <details class="more"><summary>Как проверены отзывы</summary>
+        <ul>${points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+        ${revUrl ? `<p style="margin-top:8px"><a href="${esc(revUrl)}" target="_blank" rel="noopener">Открыть отзывы в 2ГИС ↗</a></p>` : ""}
+      </details>
+      <div class="links">
+        ${c.phone ? `<span class="phone">${esc(c.phone)}</span>` : ""}
+        ${c.gis ? `<a href="${esc(c.gis)}" target="_blank" rel="noopener">Карточка в 2ГИС ↗</a>` : ""}
+        ${c.doctors_total ? `<button class="linkbtn" data-doctors-of="${esc(c.name)}">Врачи клиники (${c.doctors_total})</button>` : ""}
+      </div></article>`;
+  }
+
+  /* ---------- вкладки ---------- */
+  function showTab(name) {
+    document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+    document.querySelectorAll("main > section").forEach((s) => { s.hidden = s.id !== "tab-" + name; });
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
+
+  /* ---------- Подобрать ---------- */
+  const pick = { need: NEEDS.some((n) => n[0] === "caries") ? "caries" : NEEDS[0][0], shown: 5 };
+  $("#needs").innerHTML = NEEDS.map((n) => `<button class="need" data-need="${n[0]}" aria-pressed="false">${esc(n[1])}</button>`).join("");
+
+  function renderPick() {
+    document.querySelectorAll(".need").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.need === pick.need)));
+    const set = DATA.recommend[pick.need][$("#p-verified").checked ? "1" : "0"];
+    const items = set.items.slice(0, pick.shown);
+    const out = $("#pick-out");
+    if (!set.total) { out.innerHTML = '<div class="empty">Ничего не нашлось. Снимите галочку или выберите другую задачу.</div>'; return; }
+    out.innerHTML = `<div class="summary"><b>${esc(set.label)}: <span class="n">${set.total}</span> клиник</b>
+        <span class="count good"><i>${set.counts.good}</i> можно доверять</span>
+        <span class="count ok"><i>${set.counts.ok}</i> проверьте</span>
+        <span class="count bad"><i>${set.counts.bad}</i> не рекомендуем без проверки</span></div>
+      ${items.map((it, i) => clinicCard(byId.get(it.id), it, i + 1)).join("")}
+      ${set.items.length > pick.shown ? '<div class="more-row"><span class="muted">Лучшие ' + set.items.length + ' из ' + set.total + '</span><button class="btn" id="pick-more">Показать ещё 5</button></div>' : ""}
+      <p class="muted">Порядок: сначала «можно доверять», внутри — по индексу доверия и тому, насколько клиника подходит под задачу. Красный значок не значит, что клиника плохая: это вопрос, который стоит задать до лечения.</p>`;
+    const more = $("#pick-more");
+    if (more) more.addEventListener("click", () => { pick.shown += 5; renderPick(); });
+  }
+  $("#needs").addEventListener("click", (e) => {
+    const b = e.target.closest(".need");
+    if (b) { pick.need = b.dataset.need; pick.shown = 5; renderPick(); }
+  });
+  $("#p-verified").addEventListener("change", () => { pick.shown = 5; renderPick(); });
+
+  /* ---------- Врачи ---------- */
+  const dstate = { shown: PAGE };
+  const ds = DATA.meta.doctors;
+  $("#doc-stats").textContent = `В базе ${ds.total} стоматологов с YDoc. У ${ds.verified} площадка сверила сканы документов, ${ds.foreign} указали учёбу за рубежом` +
+    (ds.foreign_verified ? `, у ${ds.foreign_verified} зарубежный документ проверен.` : ", но зарубежные документы пока никто не проверял: это только слова анкеты.");
+  $("#dspec").insertAdjacentHTML("beforeend", DATA.specialties.map((s) => `<option>${esc(s)}</option>`).join(""));
+
+  function doctorCard(d) {
+    const edu = d.education.length ? `<ul class="edu">${d.education.map((e) => `<li><b>${esc(e.kind || "Образование")}</b>: ${esc(e.institution || "—")}${e.year ? ", " + e.year : ""}${e.specialty ? " — " + esc(e.specialty) : ""}
+        ${e.foreign ? ` <span class="chip info">${esc(e.country)}</span>` : ""}${e.confirmed ? ' <span class="chip good">документ проверен</span>' : e.foreign ? ' <span class="chip">документ не проверен</span>' : ""}
+        ${e.hint && !e.confirmed ? `<span class="hint">${esc(e.hint)}</span>` : ""}</li>`).join("")}</ul>` : '<p class="muted">Образование в анкете не указано.</p>';
+    const where = d.clinics.length ? d.clinics.map((c) => `<button class="linkbtn" data-clinic-name="${esc(c.name)}">${esc(c.name)}</button>${c.address ? ` <span class="muted">(${esc(c.address)})</span>` : ""}`).join(", ")
+      : esc(d.workplaces.join(", ") || "—");
+    return `<article class="card">
+      <div class="stack" style="gap:6px"><h3>${esc(d.name)}</h3>
+        <p class="addr">${esc(d.specialties.join(", ") || "Стоматолог")}${d.experience ? " · стаж " + d.experience + " лет" : ""}</p>
+        <div class="chips">${d.verified ? '<span class="chip good">Документы проверены на YDoc</span>' : '<span class="chip">Документы не проверены</span>'}
+          ${d.foreign ? `<span class="chip info">Учёба за рубежом: ${esc(d.foreign_countries.join(", "))}</span>` : ""}</div></div>
+      ${edu}
+      ${d.checked_documents.length ? `<p class="muted">YDoc сверил: ${esc(d.checked_documents.join(", "))}</p>` : ""}
+      ${d.red_flags.length ? `<ul class="flags bad">${d.red_flags.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${d.warnings.length ? `<ul class="flags warn">${d.warnings.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      <p class="where">Работает: ${where}${d.reviews.count ? ` · отзывы YDoc: ${fmt(d.reviews.mean)} ★ (${d.reviews.count}, подтверждено ${d.reviews.verified})` : ""}</p>
+      <div class="links"><a href="${esc(d.url)}" target="_blank" rel="noopener">Анкета на YDoc ↗</a>${d.updated ? `<span class="muted">обновлена ${esc(d.updated)}</span>` : ""}</div></article>`;
+  }
+
+  function renderDoctors() {
+    const q = $("#dq").value.trim().toLowerCase(), spec = $("#dspec").value.toLowerCase();
+    const rows = doctors.filter((d) => (!q || d.q.includes(q)) && (!spec || d.specialties.some((s) => s.toLowerCase().includes(spec))) &&
+      (!$("#dver").checked || d.verified) && (!$("#dfor").checked || d.foreign));
+    $("#doc-list").innerHTML = rows.length ? rows.slice(0, dstate.shown).map(doctorCard).join("") : '<div class="empty">Никого не нашли.</div>';
+    const shown = Math.min(rows.length, dstate.shown);
+    $("#doc-count").textContent = rows.length ? `Показано ${shown} из ${rows.length}` : "";
+    $("#doc-more").hidden = shown >= rows.length;
+  }
+  ["dq", "dspec", "dver", "dfor"].forEach((id) => $("#" + id).addEventListener(id === "dq" ? "input" : "change", () => { dstate.shown = PAGE; renderDoctors(); }));
+  $("#doc-more").addEventListener("click", () => { dstate.shown += PAGE; renderDoctors(); });
+
+  /* ---------- Клиники ---------- */
+  const cstate = { shown: PAGE };
+  const FOUND = new Set(["verified", "probable", "address_match", "state"]);
+  const PROBLEMS = new Set(["not_found", "name_other_address"]);
+  $("#cdist").insertAdjacentHTML("beforeend", DATA.districts.map((d) => `<option>${esc(d)}</option>`).join(""));
+
+  function renderClinics() {
+    const q = $("#cq").value.trim().toLowerCase(), lv = $("#clevel").value, lic = $("#clic").value, dist = $("#cdist").value;
+    let rows = DATA.clinics.filter((c) => (!c.multi || $("#cmulti").checked) && (!q || c.q.includes(q)) && (!lv || c.level === lv) &&
+      (!dist || c.district === dist) &&
+      (!lic || (lic === "found" ? FOUND.has(c.license) : lic === "problems" ? PROBLEMS.has(c.license) : c.unlicensed)));
+    const sort = $("#csort").value;
+    if (sort === "rating") rows = rows.slice().sort((a, b) => (a.rating == null) - (b.rating == null) || (b.rating || 0) - (a.rating || 0) || (b.volume || 0) - (a.volume || 0));
+    if (sort === "volume") rows = rows.slice().sort((a, b) => (b.volume || 0) - (a.volume || 0));
+    $("#clinic-list").innerHTML = rows.length ? rows.slice(0, cstate.shown).map((c) => clinicCard(c, c, c.position)).join("") : '<div class="empty">Ничего не нашли. Попробуйте убрать фильтры.</div>';
+    const shown = Math.min(rows.length, cstate.shown);
+    $("#clinic-count").textContent = rows.length ? `Показано ${shown} из ${rows.length}` : "";
+    $("#clinic-more").hidden = shown >= rows.length;
+  }
+  ["cq", "clevel", "clic", "cdist", "csort", "cmulti"].forEach((id) => $("#" + id).addEventListener(id === "cq" ? "input" : "change", () => { cstate.shown = PAGE; renderClinics(); }));
+  $("#clinic-more").addEventListener("click", () => { cstate.shown += PAGE; renderClinics(); });
+
+  document.addEventListener("click", (e) => {
+    const toDoctors = e.target.closest("[data-doctors-of]");
+    if (toDoctors) { $("#dq").value = toDoctors.dataset.doctorsOf; dstate.shown = PAGE; renderDoctors(); showTab("doctors"); return; }
+    const toClinic = e.target.closest("[data-clinic-name]");
+    if (toClinic) { $("#cq").value = toClinic.dataset.clinicName; $("#cmulti").checked = true; cstate.shown = PAGE; renderClinics(); showTab("clinics"); }
+  });
+
+  /* ---------- Данные ---------- */
+  const m = DATA.meta;
+  const LIC_LABEL = { verified: "Лицензия найдена", probable: "Вероятно найдена", address_match: "По адресу есть лицензия на другое имя",
+    ambiguous: "Много лицензиатов в одном здании", doctor_license: "ИП врача клиники, но другой адрес", name_other_address: "Лицензия на то же название, другой адрес",
+    state: "Госполиклиника (реестр её не охватывает)", not_found: "Нет в реестре" };
+  $("#about").innerHTML = `
+    <h2>Что в этом снимке</h2>
+    <p>${m.clinics} стоматологий Бишкека и ${ds.total} врачей. Рейтинги и адреса взяты из официального API 2ГИС (${esc(dateRu(m.gis_fetched))}), лицензии сверены с реестром Минздрава КР
+      на ${esc(m.registry_as_of)}, врачи — из публичных анкет YDoc. Версия: <span style="font-family:var(--mono)">${esc(DATA.version)}</span>.</p>
+    <div class="legend">
+      <div class="ck ok"><span class="g">✓</span><div><b>Проверка пройдена</b></div></div>
+      <div class="ck warn"><span class="g">!</span><div><b>Есть вопрос</b><small>что-то не подтверждено, спросите в клинике</small></div></div>
+      <div class="ck bad"><span class="g">✕</span><div><b>Красный флаг</b><small>нет лицензии в реестре, признаки накрутки, низкий рейтинг или противоречия в анкете врача</small></div></div>
+      <div class="ck unknown"><span class="g">?</span><div><b>Данных нет</b></div></div>
+    </div>
+    <h2>Лицензии</h2>
+    <div class="table-wrap"><table><tbody>${Object.keys(LIC_LABEL).filter((k) => m.license_statuses[k]).map((k) => `<tr><td>${esc(LIC_LABEL[k])}</td><td class="num">${m.license_statuses[k]}</td></tr>`).join("")}</tbody></table></div>
+    <p>«Нет в реестре» не доказывает работу без лицензии: реестр мог не учесть старые лицензии или другое юрлицо. Это повод спросить номер лицензии до лечения.
+      По точным адресам ${m.unlicensed_at_address} клиник Минздрав выявлял стоматологов без лицензии, но по одному адресу бывает много кабинетов.</p>
+    <h2>Отзывы</h2>
+    <p>Тексты отзывов 2ГИС по правилам сервиса не отдаёт, поэтому смотрим на цифры: почти одни пятёрки при сотнях оценок (так у ${m.big_clinics.with_5_0} из ${m.big_clinics.clinics_100plus} крупных клиник),
+      скачки числа оценок между обновлениями и расхождение с YDoc, где отзывы подтверждаются записью на приём или звонком.</p>
+    <h2>Врачи</h2>
+    <p>«Документы проверены» на YDoc значит, что площадка сверила скан с ФИО врача. Это сильнее слов клиники, но слабее ответа самого вуза. Проверенной считаем только ту строку образования, для которой есть сверенный документ.
+      Российский диплом можно проверить самому по номеру на <a href="https://obrnadzor.gov.ru/" target="_blank" rel="noopener">obrnadzor.gov.ru</a>.</p>
+    <h2>Чего в снимке нет</h2>
+    <p>Проверки вставленного текста (сертификат, тексты отзывов) и поиска «рядом со мной»: для них нужен запущенный сайт. Данные обновляются при новом запуске сбора, а не сами.</p>`;
+  $("#stamp").textContent = "снимок от " + dateRu(DATA.generated);
+  $("#dataline").textContent = `Проверено ${m.clinics} стоматологий · реестр лицензий Минздрава на ${m.registry_as_of} · ${ds.total} анкет врачей YDoc (у ${ds.verified} документы проверены)`;
+
+  renderPick();
+  renderDoctors();
+  renderClinics();
+})();
+</script>
