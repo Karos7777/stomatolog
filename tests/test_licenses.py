@@ -42,7 +42,7 @@ def test_scope_and_chairs():
     ("dental-house", "verified"),     # ОсОО «Дентал Хаус» — латиница ↔ кириллица
     ("alpha-dental", "verified"),     # ИП на имя основателя (Абдылдаев Нурмухамет)
     ("implant-service", "verified"),
-    ("metadent", "address_match"),    # по адресу — ИП на другое имя
+    ("metadent", "verified"),         # ИП врача клиники Темиркулова Н.С. на тот же адрес (врач найден в полной базе YDoc)
     ("dentmen", "ambiguous"),         # MedCity: много лицензиатов в одном здании
     ("kairos", "name_other_address"), # «КАЙРОС стом» — на Рыскулова, 79б
     ("emmar", "verified"),            # ИП врача клиники Эшдолотова Э.М., «мкр. Асанбай 17/1» = ул. Айтиева 17/1

@@ -54,6 +54,7 @@ def test_wrong_specialty_is_left_out():
     assert score_doctor(kids, "kids", ROWS)["profile_match"]
     assert score_doctor(ortho, "ortho", ROWS)["profile_match"]
     assert score_doctor(doctor("Общий"), "implant", ROWS) is None   # имплантацию «просто стоматологу» не предлагаем
+    assert score_doctor(doctor("Пластик", ("Пластический хирург",)), "extraction", ROWS) is None   # не стоматолог
 
 
 def test_claims_are_labelled_by_where_they_come_from():

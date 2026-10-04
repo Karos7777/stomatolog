@@ -65,6 +65,9 @@ LICENSE_PARTLY = {"address_match", "doctor_license"}
 CLAIMED, CONFIRMED, UNKNOWN = "заявлено", "подтверждено", "нет данных"
 
 
+DENTAL_WORDS = ("стоматолог", "ортодонт", "челюстно", "пародонт", "гнатолог")
+
+
 def _has(text: str, words) -> bool:
     return any(w in text for w in words)
 
@@ -90,6 +93,8 @@ def score_doctor(doctor: Dict, need: str, rows_by_id: Dict[str, Dict]) -> Option
     """None — врач для этой задачи не подходит вовсе (например, детский стоматолог для взрослого лечения каналов)."""
     prof = NEEDS[need]
     specs = [s.lower() for s in doctor["specialties"]]
+    if not _has(" ".join(specs), DENTAL_WORDS):
+        return None          # «Пластический хирург», «Остеопат» попадают в списки YDoc, но стоматологами не являются
     pediatric_only = bool(specs) and all("детск" in s for s in specs)
     if prof["adult_only"] and pediatric_only:
         return None
